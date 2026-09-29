@@ -35,4 +35,11 @@ return [
         ],
     ],
 
+    'geocoding' => [
+        'enabled' => env('GEOCODING_ENABLED', true),
+        'endpoint' => env('GEOCODING_ENDPOINT', 'https://api.bigdatacloud.net/data/reverse-geocode-client'),
+        'timeout' => (int) env('GEOCODING_TIMEOUT', 5),
+        'ttl' => (int) env('GEOCODING_TTL', 86400),
+    ],
+
 ];
