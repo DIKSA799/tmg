@@ -23,9 +23,20 @@ class RegisterPageTest extends TestCase
         $response = $this->actingAs(User::factory()->create())->get('/register');
 
         $response->assertOk();
-        $response->assertSee('Register a voter', false);
+        $response->assertSee('Be part of #TMG', false);
         $response->assertSee('name="full_name"', false);
         $response->assertSee('name="polling_unit_id"', false);
         $response->assertSee('data-theme-toggle', false);
+    }
+
+    public function test_register_page_does_not_lock_the_record_to_a_country(): void
+    {
+        State::factory()->create();
+
+        $response = $this->actingAs(User::factory()->create())->get('/register');
+
+        $response->assertOk();
+        $response->assertDontSee('Country is fixed to Nigeria', false);
+        $response->assertDontSee('name="country"', false);
     }
 }

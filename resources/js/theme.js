@@ -19,6 +19,7 @@ function currentTheme() {
 
 export function applyTheme(theme) {
     document.documentElement.setAttribute('data-theme', theme);
+    document.querySelector('meta[name="theme-color"]')?.setAttribute('content', theme === 'dark' ? '#0b0909' : '#f1eeee');
 
     document.querySelectorAll('[data-theme-toggle]').forEach((button) => {
         const label = theme === 'dark' ? 'Switch to light mode' : 'Switch to dark mode';
@@ -54,5 +55,25 @@ export function initThemeToggle() {
         if (storedTheme() === null) {
             applyTheme(systemTheme());
         }
+    });
+}
+
+export function initContrastToggle() {
+    const buttons = document.querySelectorAll('[data-contrast-toggle]');
+    if (buttons.length === 0) {
+        return;
+    }
+
+    buttons.forEach((button) => {
+        const sync = () => {
+            button.setAttribute('aria-pressed', String(document.documentElement.classList.contains('contrast-boost')));
+        };
+
+        button.addEventListener('click', () => {
+            document.documentElement.classList.toggle('contrast-boost');
+            sync();
+        });
+
+        sync();
     });
 }

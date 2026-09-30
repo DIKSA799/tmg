@@ -96,3 +96,37 @@ export function initNavSpy() {
 
     sections.forEach((section) => observer.observe(section));
 }
+
+export function initScramble() {
+    const element = document.querySelector('[data-scramble]');
+
+    if (element === null || prefersReducedMotion) {
+        return;
+    }
+
+    const final = element.textContent;
+    const characters = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
+    const duration = 1100;
+    const start = performance.now();
+
+    const frame = (now) => {
+        const progress = Math.min(1, (now - start) / duration);
+        let output = '';
+
+        for (let index = 0; index < final.length; index += 1) {
+            output += final[index] === ' '
+                ? ' '
+                : (index / final.length < progress ? final[index] : characters[Math.floor(Math.random() * characters.length)]);
+        }
+
+        element.textContent = output;
+
+        if (progress < 1) {
+            requestAnimationFrame(frame);
+        } else {
+            element.textContent = final;
+        }
+    };
+
+    requestAnimationFrame(frame);
+}

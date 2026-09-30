@@ -1,18 +1,43 @@
 @props([
-    'title' => 'Tinubu Must Go · Grassroots Voter Data Capture',
-    'description' => 'Tinubu Must Go — grassroots voter data capture for Nigeria. Register voters from state to ward to polling unit in seconds.',
+    'title' => 'Tinubu Must Go! | Civic Movement',
+    'description' => 'Public information, movement identity, privacy information and downloadable media assets.',
+    'image' => 't1.png',
+    'imageWidth' => 2411,
+    'imageHeight' => 3415,
 ])
 
 <!DOCTYPE html>
 <html lang="{{ str_replace('_', '-', app()->getLocale()) }}">
     <head>
         <meta charset="utf-8">
-        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
         <meta name="csrf-token" content="{{ csrf_token() }}">
-        <meta name="theme-color" content="#008751">
-        <meta name="description" content="{{ $description }}">
+        <meta name="theme-color" content="#f1eeee">
+        <meta name="robots" content="index,follow,max-image-preview:large">
 
         <title>{{ $title }}</title>
+        <meta name="description" content="{{ $description }}">
+        <link rel="canonical" href="{{ url()->current() }}">
+
+        {{-- Icons --}}
+        <link rel="icon" href="{{ asset('favicon-32.png') }}" type="image/png" sizes="32x32">
+        <link rel="icon" href="{{ asset('favicon.png') }}" type="image/png" sizes="512x512">
+        <link rel="apple-touch-icon" href="{{ asset('apple-touch-icon.png') }}">
+
+        {{-- Social preview --}}
+        <meta property="og:type" content="website">
+        <meta property="og:site_name" content="Tinubu Must Go">
+        <meta property="og:title" content="{{ $title }}">
+        <meta property="og:description" content="{{ $description }}">
+        <meta property="og:url" content="{{ url()->current() }}">
+        <meta property="og:image" content="{{ asset($image) }}">
+        <meta property="og:image:width" content="{{ $imageWidth }}">
+        <meta property="og:image:height" content="{{ $imageHeight }}">
+        <meta property="og:image:alt" content="Tinubu Must Go movement artwork">
+        <meta name="twitter:card" content="summary_large_image">
+        <meta name="twitter:title" content="{{ $title }}">
+        <meta name="twitter:description" content="{{ $description }}">
+        <meta name="twitter:image" content="{{ asset($image) }}">
 
         {{-- Resolve the theme before first paint so there is no flash. --}}
         <script>

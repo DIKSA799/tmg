@@ -32,7 +32,7 @@
     {{-- Success panel --}}
     <div class="hidden p-7 sm:p-9" data-success hidden>
         <div class="mx-auto max-w-lg text-center">
-            <div class="mx-auto flex h-16 w-16 items-center justify-center rounded-full bg-[color:var(--accent-soft)] text-[color:var(--accent)]">
+            <div class="mx-auto flex h-16 w-16 items-center justify-center rounded-full bg-[color:var(--accent-soft)] text-[color:var(--accent-ink)]">
                 <svg width="28" height="28" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="m5 13 4 4L19 7" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/></svg>
             </div>
             <h3 class="mt-5 font-display text-2xl font-bold" data-success-title>Record captured</h3>
@@ -60,7 +60,7 @@
         {{-- 1 · Identity --}}
         <fieldset class="space-y-6" data-section="identity">
             <legend class="flex items-center gap-3">
-                <span class="flex h-8 w-8 items-center justify-center rounded-full bg-[color:var(--accent-soft)] font-display text-sm font-bold text-[color:var(--accent)]">1</span>
+                <span class="flex h-8 w-8 items-center justify-center rounded-full bg-[color:var(--accent-soft)] font-display text-sm font-bold text-[color:var(--accent-ink)]">1</span>
                 <span class="font-display text-lg font-bold">Identity</span>
             </legend>
 
@@ -107,22 +107,11 @@
         {{-- 2 · Location --}}
         <fieldset class="space-y-6" data-section="location">
             <legend class="flex items-center gap-3">
-                <span class="flex h-8 w-8 items-center justify-center rounded-full bg-[color:var(--accent-soft)] font-display text-sm font-bold text-[color:var(--accent)]">2</span>
+                <span class="flex h-8 w-8 items-center justify-center rounded-full bg-[color:var(--accent-soft)] font-display text-sm font-bold text-[color:var(--accent-ink)]">2</span>
                 <span class="font-display text-lg font-bold">Location</span>
             </legend>
 
             <div class="grid gap-5 sm:grid-cols-2">
-                <div class="min-w-0 sm:col-span-2">
-                    <span class="field-label">Country</span>
-                    <div class="combo-trigger neo-inset cursor-default">
-                        <span class="flex items-center gap-2 text-[color:var(--ink)]">
-                            <span class="flag-stripe inline-block h-4 w-6 rounded-[3px]" aria-hidden="true"></span>
-                            Nigeria
-                        </span>
-                        <span class="chip !px-2.5 !py-1 text-[10px]">Fixed</span>
-                    </div>
-                </div>
-
                 <x-combobox name="state_id" label="State" placeholder="Select state…" />
                 <x-combobox name="lga_id" label="Local Government Area" placeholder="Select LGA…" :disabled="true" />
                 <x-combobox name="ward_id" label="Ward / Registration Area" placeholder="Select ward…" :disabled="true" />
@@ -133,7 +122,7 @@
         {{-- 3 · Status & preferences --}}
         <fieldset class="space-y-6" data-section="status">
             <legend class="flex items-center gap-3">
-                <span class="flex h-8 w-8 items-center justify-center rounded-full bg-[color:var(--accent-soft)] font-display text-sm font-bold text-[color:var(--accent)]">3</span>
+                <span class="flex h-8 w-8 items-center justify-center rounded-full bg-[color:var(--accent-soft)] font-display text-sm font-bold text-[color:var(--accent-ink)]">3</span>
                 <span class="font-display text-lg font-bold">Voter status &amp; preferences</span>
             </legend>
 
@@ -199,7 +188,7 @@
         {{-- 4 · Consent --}}
         <fieldset class="space-y-6" data-section="consent">
             <legend class="flex items-center gap-3">
-                <span class="flex h-8 w-8 items-center justify-center rounded-full bg-[color:var(--accent-soft)] font-display text-sm font-bold text-[color:var(--accent)]">4</span>
+                <span class="flex h-8 w-8 items-center justify-center rounded-full bg-[color:var(--accent-soft)] font-display text-sm font-bold text-[color:var(--accent-ink)]">4</span>
                 <span class="font-display text-lg font-bold">Consent</span>
             </legend>
 

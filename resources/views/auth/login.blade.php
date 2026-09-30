@@ -5,7 +5,7 @@
     <main class="shell flex min-h-dvh flex-col items-center justify-center py-12">
         <div class="w-full max-w-md">
             <a href="{{ route('home') }}" class="mx-auto flex w-fit items-center gap-3">
-                <img src="{{ asset('tmg-logo-256.jpg') }}" alt="" width="44" height="44" class="h-11 w-11 flex-none rounded-full bg-white object-contain ring-1 ring-black/5">
+                <img src="{{ asset('t2.png') }}" alt="Tinubu Must Go" width="2413" height="2875" class="brand-logo">
                 <span class="flex flex-col leading-none">
                     <span class="font-display text-base font-bold tracking-tight">Tinubu Must Go</span>
                     <span class="text-[10px] font-medium uppercase tracking-[0.14em] text-[color:var(--ink-mute)]">Registration desk</span>
