@@ -4,6 +4,7 @@ namespace Tests\Feature;
 
 use App\Models\Lga;
 use App\Models\State;
+use App\Models\User;
 use App\Models\Ward;
 use Illuminate\Foundation\Testing\LazilyRefreshDatabase;
 use Illuminate\Support\Facades\Http;
@@ -12,6 +13,11 @@ use Tests\TestCase;
 class LocationLookupTest extends TestCase
 {
     use LazilyRefreshDatabase;
+
+    private function operator(): self
+    {
+        return $this->actingAs(User::factory()->create());
+    }
 
     public function test_locate_matches_state_lga_and_ward_from_coordinates(): void
     {
@@ -30,7 +36,7 @@ class LocationLookupTest extends TestCase
         $lga = Lga::factory()->for($state)->create(['name' => 'Ndokwa West', 'slug' => 'ndokwa-west', 'code' => '12']);
         $ward = Ward::factory()->for($lga)->create(['name' => 'Utagba Ogbe', 'slug' => 'utagba-ogbe', 'code' => '01']);
 
-        $this->postJson('/geography/locate', ['latitude' => 5.9, 'longitude' => 6.4])
+        $this->operator()->postJson('/geography/locate', ['latitude' => 5.9, 'longitude' => 6.4])
             ->assertOk()
             ->assertJsonPath('data.matched', true)
             ->assertJsonPath('data.state.id', $state->id)
@@ -43,7 +49,7 @@ class LocationLookupTest extends TestCase
         Http::preventStrayRequests();
         Http::fake(['api.bigdatacloud.net/*' => Http::response(null, 500)]);
 
-        $this->postJson('/geography/locate', ['latitude' => 5.9, 'longitude' => 6.4])
+        $this->operator()->postJson('/geography/locate', ['latitude' => 5.9, 'longitude' => 6.4])
             ->assertOk()
             ->assertJsonPath('data.matched', false)
             ->assertJsonPath('data.reason', 'unavailable');
@@ -54,7 +60,7 @@ class LocationLookupTest extends TestCase
         config(['services.geocoding.enabled' => false]);
         Http::preventStrayRequests();
 
-        $this->postJson('/geography/locate', ['latitude' => 5.9, 'longitude' => 6.4])
+        $this->operator()->postJson('/geography/locate', ['latitude' => 5.9, 'longitude' => 6.4])
             ->assertOk()
             ->assertJsonPath('data.matched', false)
             ->assertJsonPath('data.reason', 'disabled');
@@ -62,7 +68,7 @@ class LocationLookupTest extends TestCase
 
     public function test_locate_rejects_coordinates_outside_the_valid_range(): void
     {
-        $this->postJson('/geography/locate', ['latitude' => 120, 'longitude' => 200])
+        $this->operator()->postJson('/geography/locate', ['latitude' => 120, 'longitude' => 200])
             ->assertStatus(422)
             ->assertJsonValidationErrors(['latitude', 'longitude']);
     }

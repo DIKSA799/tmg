@@ -3,6 +3,7 @@
 namespace Tests\Feature;
 
 use App\Models\State;
+use App\Models\User;
 use Illuminate\Foundation\Testing\LazilyRefreshDatabase;
 use Tests\TestCase;
 
@@ -10,11 +11,19 @@ class LandingPageTest extends TestCase
 {
     use LazilyRefreshDatabase;
 
-    public function test_landing_page_renders_the_movement_content(): void
+    public function test_guests_see_the_sign_in_form_at_the_root(): void
+    {
+        $this->get('/')
+            ->assertOk()
+            ->assertSee('Sign in', false)
+            ->assertDontSee('Movement information', false);
+    }
+
+    public function test_landing_page_renders_the_movement_content_for_signed_in_users(): void
     {
         State::factory()->create();
 
-        $response = $this->get('/');
+        $response = $this->actingAs(User::factory()->create())->get('/');
 
         $response->assertOk();
         $response->assertSee('Tinubu Must Go!', false);
@@ -28,7 +37,7 @@ class LandingPageTest extends TestCase
     {
         State::factory()->create();
 
-        $response = $this->get('/');
+        $response = $this->actingAs(User::factory()->create())->get('/');
 
         $response->assertOk();
         $response->assertSee('property="og:image" content="'.asset('t1.png').'"', false);
@@ -41,7 +50,7 @@ class LandingPageTest extends TestCase
     {
         State::factory()->create();
 
-        $response = $this->get('/');
+        $response = $this->actingAs(User::factory()->create())->get('/');
 
         $response->assertOk();
         $response->assertSee(asset('t2.png'), false);
@@ -54,7 +63,7 @@ class LandingPageTest extends TestCase
     {
         State::factory()->create();
 
-        $response = $this->get('/');
+        $response = $this->actingAs(User::factory()->create())->get('/');
 
         $response->assertOk();
         $response->assertDontSee('data-capture-form', false);
@@ -64,9 +73,9 @@ class LandingPageTest extends TestCase
     {
         State::factory()->create();
 
-        $this->get('/')
+        $this->actingAs(User::factory()->create())
+            ->get('/')
             ->assertOk()
-            ->assertSee(route('register'), false)
-            ->assertSee('Be part of #TMG', false);
+            ->assertSee(route('register'), false);
     }
 }

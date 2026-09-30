@@ -5,6 +5,7 @@ namespace Tests\Feature;
 use App\Models\Lga;
 use App\Models\PollingUnit;
 use App\Models\State;
+use App\Models\User;
 use App\Models\Ward;
 use Illuminate\Foundation\Testing\LazilyRefreshDatabase;
 use Tests\TestCase;
@@ -13,12 +14,24 @@ class GeographyApiTest extends TestCase
 {
     use LazilyRefreshDatabase;
 
+    private function operator(): self
+    {
+        return $this->actingAs(User::factory()->create());
+    }
+
+    public function test_geography_endpoints_require_an_operator(): void
+    {
+        State::factory()->create();
+
+        $this->getJson('/geography/states')->assertUnauthorized();
+    }
+
     public function test_states_endpoint_returns_states_ordered_by_name(): void
     {
         State::factory()->create(['name' => 'Zamfara', 'slug' => 'zamfara', 'code' => '36']);
         State::factory()->create(['name' => 'Abia', 'slug' => 'abia', 'code' => '01']);
 
-        $this->getJson('/geography/states')
+        $this->operator()->getJson('/geography/states')
             ->assertOk()
             ->assertJsonCount(2, 'data')
             ->assertJsonPath('data.0.name', 'Abia')
@@ -33,7 +46,7 @@ class GeographyApiTest extends TestCase
         Lga::factory()->for($state)->create(['name' => 'Ndokwa West', 'slug' => 'ndokwa-west', 'code' => '12']);
         Lga::factory()->for($otherState)->create(['name' => 'Aba North', 'slug' => 'aba-north', 'code' => '01']);
 
-        $this->getJson("/geography/states/{$state->id}/lgas")
+        $this->operator()->getJson("/geography/states/{$state->id}/lgas")
             ->assertOk()
             ->assertJsonCount(1, 'data')
             ->assertJsonPath('data.0.name', 'Ndokwa West');
@@ -46,7 +59,7 @@ class GeographyApiTest extends TestCase
         Ward::factory()->for($lga)->create(['name' => 'Utagba Ogbe', 'slug' => 'utagba-ogbe', 'code' => '01']);
         Ward::factory()->for($otherLga)->create(['name' => 'Umuebu', 'slug' => 'umuebu', 'code' => '02']);
 
-        $this->getJson("/geography/lgas/{$lga->id}/wards")
+        $this->operator()->getJson("/geography/lgas/{$lga->id}/wards")
             ->assertOk()
             ->assertJsonCount(1, 'data')
             ->assertJsonPath('data.0.name', 'Utagba Ogbe');
@@ -60,7 +73,7 @@ class GeographyApiTest extends TestCase
         PollingUnit::factory()->for($ward)->create(['name' => 'Alpha Square', 'code' => '01/01/01/001', 'pu_code' => '001']);
         PollingUnit::factory()->for($otherWard)->create(['name' => 'Other Unit', 'code' => '01/01/02/001', 'pu_code' => '001']);
 
-        $this->getJson("/geography/wards/{$ward->id}/polling-units")
+        $this->operator()->getJson("/geography/wards/{$ward->id}/polling-units")
             ->assertOk()
             ->assertJsonCount(2, 'data')
             ->assertJsonPath('data.0.name', 'Alpha Square')

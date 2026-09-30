@@ -41,7 +41,7 @@ return [
     */
 
     'throttle' => [
-        'login' => (string) env('ADMIN_LOGIN_THROTTLE', '5,1'),
+        'login' => (string) env('ADMIN_LOGIN_THROTTLE', '60,1'),
         'pages' => (string) env('ADMIN_THROTTLE', '240,1'),
     ],
 

@@ -15,6 +15,7 @@ use App\Models\VoterRecord;
 use App\Models\Ward;
 use Carbon\CarbonImmutable;
 use Closure;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
 
@@ -37,8 +38,8 @@ class DashboardAnalytics
         $now = CarbonImmutable::now();
         $since = $now->subDays($days - 1)->startOfDay();
 
-        /** @var Closure(): \Illuminate\Database\Eloquent\Builder<VoterRecord> $scoped */
-        $scoped = fn () => VoterRecord::query()->where('created_at', '>=', $since);
+        /** @var Closure(): Builder<VoterRecord> $scoped */
+        $scoped = fn () => VoterRecord::query()->where('voter_records.created_at', '>=', $since);
 
         $inRange = $scoped()->count();
 
@@ -65,8 +66,8 @@ class DashboardAnalytics
             'kpis' => [
                 'total' => VoterRecord::query()->count(),
                 'in_range' => $inRange,
-                'today' => VoterRecord::query()->where('created_at', '>=', $now->startOfDay())->count(),
-                'last_7_days' => VoterRecord::query()->where('created_at', '>=', $now->subDays(6)->startOfDay())->count(),
+                'today' => VoterRecord::query()->where('voter_records.created_at', '>=', $now->startOfDay())->count(),
+                'last_7_days' => VoterRecord::query()->where('voter_records.created_at', '>=', $now->subDays(6)->startOfDay())->count(),
                 'consent_contact_rate' => $this->rate((int) ($consent->contact ?? 0), $inRange),
                 'consent_data_rate' => $this->rate((int) ($consent->data_consent ?? 0), $inRange),
                 'pvc_rate' => $this->rate($this->value($pvc, PvcStatus::Collected->label()), $inRange),
@@ -125,7 +126,7 @@ class DashboardAnalytics
     {
         /** @var array<string, int|string> $rows */
         $rows = VoterRecord::query()
-            ->where('created_at', '>=', $since)
+            ->where('voter_records.created_at', '>=', $since)
             ->selectRaw('DATE(created_at) as day, count(*) as total')
             ->groupBy('day')
             ->pluck('total', 'day')
@@ -144,7 +145,7 @@ class DashboardAnalytics
     }
 
     /**
-     * @param  Closure(): \Illuminate\Database\Eloquent\Builder<VoterRecord>  $scoped
+     * @param  Closure(): Builder<VoterRecord>  $scoped
      * @return list<array{label: string, total: int}>
      */
     private function topBy(string $table, string $foreignKey, Closure $scoped): array
@@ -161,7 +162,7 @@ class DashboardAnalytics
     }
 
     /**
-     * @param  Closure(): \Illuminate\Database\Eloquent\Builder<VoterRecord>  $scoped
+     * @param  Closure(): Builder<VoterRecord>  $scoped
      * @return list<array{name: string, total: int, lgas: int, wards: int, units: int}>
      */
     private function byState(Closure $scoped): array

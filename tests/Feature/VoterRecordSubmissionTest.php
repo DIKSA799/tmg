@@ -5,6 +5,7 @@ namespace Tests\Feature;
 use App\Models\Lga;
 use App\Models\PollingUnit;
 use App\Models\State;
+use App\Models\User;
 use App\Models\VoterRecord;
 use App\Models\Ward;
 use Illuminate\Foundation\Testing\LazilyRefreshDatabase;
@@ -14,6 +15,13 @@ use Tests\TestCase;
 class VoterRecordSubmissionTest extends TestCase
 {
     use LazilyRefreshDatabase;
+
+    private ?User $operator = null;
+
+    private function operator(): self
+    {
+        return $this->actingAs($this->operator ??= User::factory()->create());
+    }
 
     /**
      * @param  array<string, mixed>  $overrides
@@ -46,9 +54,14 @@ class VoterRecordSubmissionTest extends TestCase
         ], $overrides);
     }
 
+    public function test_submissions_require_an_operator(): void
+    {
+        $this->postJson('/submissions', [])->assertUnauthorized();
+    }
+
     public function test_valid_payload_creates_a_record_and_returns_201(): void
     {
-        $response = $this->postJson('/submissions', $this->payload());
+        $response = $this->operator()->postJson('/submissions', $this->payload());
 
         $response->assertCreated()
             ->assertJsonPath('ok', true)
@@ -65,14 +78,14 @@ class VoterRecordSubmissionTest extends TestCase
 
     public function test_phone_is_normalised_to_international_format(): void
     {
-        $this->postJson('/submissions', $this->payload(['phone' => '0803 123 4567']))->assertCreated();
+        $this->operator()->postJson('/submissions', $this->payload(['phone' => '0803 123 4567']))->assertCreated();
 
         $this->assertDatabaseHas('voter_records', ['phone' => '+2348031234567']);
     }
 
     public function test_ip_address_and_device_context_are_captured(): void
     {
-        $this->postJson('/submissions', $this->payload(['device' => ['device_id' => 'device-xyz', 'platform' => 'iOS']]))
+        $this->operator()->postJson('/submissions', $this->payload(['device' => ['device_id' => 'device-xyz', 'platform' => 'iOS']]))
             ->assertCreated();
 
         $record = VoterRecord::query()->sole();
@@ -86,8 +99,8 @@ class VoterRecordSubmissionTest extends TestCase
     {
         $payload = $this->payload();
 
-        $first = $this->postJson('/submissions', $payload);
-        $second = $this->postJson('/submissions', $payload);
+        $first = $this->operator()->postJson('/submissions', $payload);
+        $second = $this->operator()->postJson('/submissions', $payload);
 
         $first->assertCreated()->assertJsonPath('duplicate', false);
         $second->assertOk()->assertJsonPath('duplicate', true);
@@ -97,7 +110,7 @@ class VoterRecordSubmissionTest extends TestCase
 
     public function test_invalid_phone_number_returns_422(): void
     {
-        $this->postJson('/submissions', $this->payload(['phone' => '12345']))
+        $this->operator()->postJson('/submissions', $this->payload(['phone' => '12345']))
             ->assertStatus(422)
             ->assertJsonValidationErrors('phone');
     }
@@ -107,7 +120,7 @@ class VoterRecordSubmissionTest extends TestCase
         $payload = $this->payload();
         $foreignLga = Lga::factory()->create();
 
-        $this->postJson('/submissions', array_merge($payload, ['lga_id' => $foreignLga->id]))
+        $this->operator()->postJson('/submissions', array_merge($payload, ['lga_id' => $foreignLga->id]))
             ->assertStatus(422)
             ->assertJsonValidationErrors('lga_id');
     }
@@ -117,25 +130,25 @@ class VoterRecordSubmissionTest extends TestCase
         $payload = $this->payload();
         $foreignUnit = PollingUnit::factory()->create();
 
-        $this->postJson('/submissions', array_merge($payload, ['polling_unit_id' => $foreignUnit->id]))
+        $this->operator()->postJson('/submissions', array_merge($payload, ['polling_unit_id' => $foreignUnit->id]))
             ->assertStatus(422)
             ->assertJsonValidationErrors('polling_unit_id');
     }
 
     public function test_missing_data_processing_consent_returns_422(): void
     {
-        $this->postJson('/submissions', $this->payload(['consent_to_data' => false]))
+        $this->operator()->postJson('/submissions', $this->payload(['consent_to_data' => false]))
             ->assertStatus(422)
             ->assertJsonValidationErrors('consent_to_data');
     }
 
     public function test_selecting_other_language_requires_details(): void
     {
-        $this->postJson('/submissions', $this->payload(['preferred_language' => 'other']))
+        $this->operator()->postJson('/submissions', $this->payload(['preferred_language' => 'other']))
             ->assertStatus(422)
             ->assertJsonValidationErrors('preferred_language_other');
 
-        $this->postJson('/submissions', $this->payload([
+        $this->operator()->postJson('/submissions', $this->payload([
             'preferred_language' => 'other',
             'preferred_language_other' => 'Tiv',
         ]))->assertCreated();

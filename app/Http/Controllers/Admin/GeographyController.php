@@ -10,6 +10,7 @@ use App\Models\VoterRecord;
 use App\Models\Ward;
 use Illuminate\Contracts\View\View;
 use Illuminate\Http\Request;
+use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
 
 class GeographyController extends Controller
@@ -47,9 +48,9 @@ class GeographyController extends Controller
     /**
      * Polling units sit three levels below a state, so count them with a join.
      *
-     * @return \Illuminate\Support\Collection<int|string, int|string>
+     * @return Collection<int|string, int|string>
      */
-    private function unitsPerState(): \Illuminate\Support\Collection
+    private function unitsPerState(): Collection
     {
         return DB::table('polling_units')
             ->join('wards', 'wards.id', '=', 'polling_units.ward_id')

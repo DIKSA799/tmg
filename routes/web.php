@@ -5,14 +5,23 @@ use App\Http\Controllers\Admin\GeographyController as AdminGeographyController;
 use App\Http\Controllers\Admin\LoginController as AdminLoginController;
 use App\Http\Controllers\Admin\RecordController as AdminRecordController;
 use App\Http\Controllers\GeographyController;
-use App\Http\Controllers\LandingController;
 use App\Http\Controllers\LoginController;
 use App\Http\Controllers\RegisterController;
+use App\Http\Controllers\RootController;
 use App\Http\Controllers\VoterRecordController;
 use App\Http\Middleware\NoIndex;
 use Illuminate\Support\Facades\Route;
 
-Route::get('/', LandingController::class)->name('home');
+/*
+|--------------------------------------------------------------------------
+| Root gate (temporary)
+|--------------------------------------------------------------------------
+|
+| The system is closed to authorised operators for now: the root shows the
+| sign-in form to guests and the landing page to signed-in users.
+|
+*/
+Route::get('/', RootController::class)->name('home');
 
 Route::middleware('guest')->group(function () {
     Route::get('login', [LoginController::class, 'create'])->name('login');
@@ -23,24 +32,24 @@ Route::post('logout', [LoginController::class, 'destroy'])
     ->middleware('auth')
     ->name('logout');
 
-Route::get('register', RegisterController::class)
-    ->middleware('auth')
-    ->name('register');
+Route::middleware('auth')->group(function () {
+    Route::get('register', RegisterController::class)->name('register');
 
-Route::prefix('geography')->name('geography.')->group(function () {
-    Route::get('states', [GeographyController::class, 'states'])->name('states');
-    Route::get('states/{state}/lgas', [GeographyController::class, 'lgas'])->name('lgas');
-    Route::get('lgas/{lga}/wards', [GeographyController::class, 'wards'])->name('wards');
-    Route::get('wards/{ward}/polling-units', [GeographyController::class, 'pollingUnits'])->name('polling-units');
+    Route::prefix('geography')->name('geography.')->group(function () {
+        Route::get('states', [GeographyController::class, 'states'])->name('states');
+        Route::get('states/{state}/lgas', [GeographyController::class, 'lgas'])->name('lgas');
+        Route::get('lgas/{lga}/wards', [GeographyController::class, 'wards'])->name('wards');
+        Route::get('wards/{ward}/polling-units', [GeographyController::class, 'pollingUnits'])->name('polling-units');
 
-    Route::post('locate', [GeographyController::class, 'locate'])
-        ->middleware('throttle:30,1')
-        ->name('locate');
+        Route::post('locate', [GeographyController::class, 'locate'])
+            ->middleware('throttle:30,1')
+            ->name('locate');
+    });
+
+    Route::post('submissions', [VoterRecordController::class, 'store'])
+        ->middleware('throttle:20,1')
+        ->name('submissions.store');
 });
-
-Route::post('submissions', [VoterRecordController::class, 'store'])
-    ->middleware('throttle:20,1')
-    ->name('submissions.store');
 
 /*
 |--------------------------------------------------------------------------

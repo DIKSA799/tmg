@@ -18,12 +18,12 @@ class LoginTest extends TestCase
             ->assertSee('Sign in', false);
     }
 
-    public function test_seeded_credentials_sign_in_and_reach_the_register_page(): void
+    public function test_seeded_credentials_sign_in_and_reach_the_landing_page(): void
     {
         $this->seed(TmgUserSeeder::class);
 
         $this->post('/login', ['username' => 'tmguser', 'password' => 'passwd20'])
-            ->assertRedirect(route('register'));
+            ->assertRedirect(route('home'));
 
         $this->assertAuthenticated();
     }
@@ -45,7 +45,7 @@ class LoginTest extends TestCase
         $this->seed(TmgUserSeeder::class);
 
         $this->post('/login', ['username' => 'TMGUSER', 'password' => 'passwd20'])
-            ->assertRedirect(route('register'));
+            ->assertRedirect(route('home'));
 
         $this->assertAuthenticated();
     }
