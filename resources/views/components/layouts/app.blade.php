@@ -44,9 +44,7 @@
             (function () {
                 try {
                     var stored = window.localStorage.getItem('tmg.theme');
-                    var theme = stored === 'light' || stored === 'dark'
-                        ? stored
-                        : (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
+                    var theme = stored === 'dark' ? 'dark' : 'light';
 
                     document.documentElement.setAttribute('data-theme', theme);
                 } catch (error) {

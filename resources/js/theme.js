@@ -9,12 +9,9 @@ function storedTheme() {
     }
 }
 
-function systemTheme() {
-    return window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
-}
-
+// Light is the default; only an explicit choice by the visitor is remembered.
 function currentTheme() {
-    return document.documentElement.getAttribute('data-theme') ?? systemTheme();
+    return document.documentElement.getAttribute('data-theme') ?? storedTheme() ?? 'light';
 }
 
 export function applyTheme(theme) {
@@ -49,12 +46,6 @@ export function initThemeToggle() {
 
             applyTheme(next);
         });
-    });
-
-    window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', () => {
-        if (storedTheme() === null) {
-            applyTheme(systemTheme());
-        }
     });
 }
 

@@ -37,7 +37,7 @@ class LandingPageTest extends TestCase
         $response->assertSee('rel="apple-touch-icon" href="'.asset('apple-touch-icon.png').'"', false);
     }
 
-    public function test_landing_page_uses_the_movement_logo_and_live_modules(): void
+    public function test_landing_page_uses_the_movement_logo_and_interface_controls(): void
     {
         State::factory()->create();
 
@@ -45,10 +45,9 @@ class LandingPageTest extends TestCase
 
         $response->assertOk();
         $response->assertSee(asset('t2.png'), false);
-        $response->assertSee('data-weather', false);
-        $response->assertSee('data-clock', false);
         $response->assertSee('data-contrast-toggle', false);
         $response->assertSee('data-theme-toggle', false);
+        $response->assertSee('data-scramble', false);
     }
 
     public function test_landing_page_no_longer_hosts_the_capture_form(): void
