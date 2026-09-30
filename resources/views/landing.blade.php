@@ -26,7 +26,7 @@
                 <div class="flex flex-none items-center gap-2">
                     <x-auth-actions />
                     <x-theme-toggle />
-                    <a href="{{ route('register') }}" class="btn btn-primary !px-4 !py-2.5 text-[0.72rem] font-bold uppercase tracking-[0.08em]">Be part of #TMG</a>
+                    <a href="{{ route('register') }}" class="btn btn-primary !px-4 !py-2.5 text-[0.72rem] font-bold uppercase tracking-[0.08em]">Register</a>
                 </div>
             </nav>
         </header>
