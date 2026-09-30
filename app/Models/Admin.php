@@ -1,0 +1,29 @@
+<?php
+
+namespace App\Models;
+
+use Database\Factories\AdminFactory;
+use Illuminate\Database\Eloquent\Attributes\Fillable;
+use Illuminate\Database\Eloquent\Attributes\Hidden;
+use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Foundation\Auth\User as Authenticatable;
+
+#[Fillable(['name', 'username', 'email', 'password'])]
+#[Hidden(['password', 'remember_token'])]
+class Admin extends Authenticatable
+{
+    /** @use HasFactory<AdminFactory> */
+    use HasFactory;
+
+    /**
+     * @return array<string, string>
+     */
+    protected function casts(): array
+    {
+        return [
+            'email_verified_at' => 'datetime',
+            'last_login_at' => 'datetime',
+            'password' => 'hashed',
+        ];
+    }
+}

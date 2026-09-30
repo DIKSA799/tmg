@@ -20,13 +20,13 @@
             </p>
         </div>
 
-        <div class="flex flex-col items-start gap-3">
+        {{-- <div class="flex flex-col items-start gap-3">
             <button type="button" class="btn btn-ghost" data-geolocate>
                 <svg width="16" height="16" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M12 2v3m0 14v3M2 12h3m14 0h3M12 8a4 4 0 1 0 0 8 4 4 0 0 0 0-8Z" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>
                 Use my location
             </button>
             <p class="text-xs text-[color:var(--ink-mute)]" data-geo-status role="status" aria-live="polite">No location shared yet.</p>
-        </div>
+        </div> --}}
     </div>
 
     {{-- Success panel --}}
