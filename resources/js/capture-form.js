@@ -136,6 +136,14 @@ export function initCaptureForm() {
         boxes.set(name, new SearchSelect(root, {
             onChange: (value) => handlers[name]?.(value),
         }));
+
+        if (root.dataset.options) {
+            try {
+                box(name).setOptions(JSON.parse(root.dataset.options), { autoSelect: false });
+            } catch {
+                // Malformed option data is ignored; the combobox keeps its placeholder.
+            }
+        }
     });
 
     async function primeStates() {
@@ -283,6 +291,11 @@ export function initCaptureForm() {
             gender: data.get('gender'),
             age_band: data.get('age_band'),
             phone: text('phone'),
+            whatsapp: text('whatsapp'),
+            email: text('email'),
+            volunteer_category: text('volunteer_category'),
+            occupation: text('occupation'),
+            has_disability: data.get('has_disability') === '1',
             state_id: toId(data.get('state_id')),
             lga_id: toId(data.get('lga_id')),
             ward_id: toId(data.get('ward_id')),
@@ -330,12 +343,14 @@ export function initCaptureForm() {
         successPanel.classList.add('hidden');
         form.classList.remove('hidden');
 
-        ['full_name', 'phone', 'preferred_language_other', 'preferred_channel_other'].forEach((name) => {
+        ['full_name', 'phone', 'whatsapp', 'email', 'preferred_language_other', 'preferred_channel_other'].forEach((name) => {
             const input = form.querySelector(`[name="${name}"]`);
             if (input) {
                 input.value = '';
             }
         });
+
+        ['volunteer_category', 'occupation'].forEach((name) => box(name)?.clear());
 
         ['age_band', 'registered_voter_status', 'pvc_status', 'preferred_language', 'preferred_channel'].forEach((name) => {
             const select = form.querySelector(`[name="${name}"]`);
@@ -349,6 +364,9 @@ export function initCaptureForm() {
         });
         form.querySelectorAll('input[type="radio"][name="consent_to_contact"], input[type="radio"][name="consent_to_data"]').forEach((radio) => {
             radio.checked = radio.value === '1';
+        });
+        form.querySelectorAll('input[type="radio"][name="has_disability"]').forEach((radio) => {
+            radio.checked = radio.value === '0';
         });
         form.querySelectorAll('[data-other-field]').forEach((field) => {
             field.classList.add('hidden');

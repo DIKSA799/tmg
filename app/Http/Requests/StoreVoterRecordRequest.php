@@ -4,10 +4,12 @@ namespace App\Http\Requests;
 
 use App\Enums\AgeBand;
 use App\Enums\Gender;
+use App\Enums\Occupation;
 use App\Enums\PreferredChannel;
 use App\Enums\PreferredLanguage;
 use App\Enums\PvcStatus;
 use App\Enums\RegisteredVoterStatus;
+use App\Enums\VolunteerCategory;
 use App\Models\Lga;
 use App\Models\PollingUnit;
 use App\Models\Ward;
@@ -30,6 +32,11 @@ class StoreVoterRecordRequest extends FormRequest
             'gender' => ['required', Rule::enum(Gender::class)],
             'age_band' => ['required', Rule::enum(AgeBand::class)],
             'phone' => ['required', 'string', 'regex:/^\+234[789]\d{9}$/'],
+            'whatsapp' => ['nullable', 'string', 'regex:/^\+234[789]\d{9}$/'],
+            'email' => ['nullable', 'email:rfc', 'max:120'],
+            'volunteer_category' => ['required', Rule::enum(VolunteerCategory::class)],
+            'occupation' => ['required', Rule::enum(Occupation::class)],
+            'has_disability' => ['required', 'boolean'],
 
             'state_id' => ['required', 'integer', 'exists:states,id'],
             'lga_id' => ['required', 'integer', 'exists:lgas,id'],
@@ -62,6 +69,7 @@ class StoreVoterRecordRequest extends FormRequest
     {
         return [
             'phone.regex' => 'Enter a valid Nigerian phone number, for example 0800 000 0000.',
+            'whatsapp.regex' => 'Enter a valid Nigerian WhatsApp number, for example 0800 000 0000.',
             'consent_to_data.accepted' => 'You must consent to data processing before we can store this record.',
         ];
     }
@@ -100,6 +108,9 @@ class StoreVoterRecordRequest extends FormRequest
     {
         $this->merge([
             'phone' => PhoneNumber::normalize($this->input('phone')),
+            'whatsapp' => PhoneNumber::normalize($this->input('whatsapp')),
+            'email' => $this->filled('email') ? $this->input('email') : null,
+            'has_disability' => $this->boolean('has_disability'),
             'consent_to_contact' => $this->boolean('consent_to_contact'),
             'consent_to_data' => $this->boolean('consent_to_data'),
             'preferred_language_other' => $this->input('preferred_language') === PreferredLanguage::Other->value

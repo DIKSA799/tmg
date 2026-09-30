@@ -5,14 +5,24 @@
     'hint' => null,
     'disabled' => false,
     'required' => true,
+    'options' => null,
 ])
 
 @php
     $triggerId = 'combo-'.$name.'-trigger';
     $listId = 'combo-'.$name.'-list';
+    $staticOptions = collect($options ?? [])
+        ->map(fn (string $label, int|string $value): array => ['value' => (string) $value, 'label' => $label])
+        ->values()
+        ->all();
 @endphp
 
-<div data-combobox data-name="{{ $name }}" data-disabled="{{ $disabled ? 'true' : 'false' }}">
+<div
+    data-combobox
+    data-name="{{ $name }}"
+    data-disabled="{{ $disabled ? 'true' : 'false' }}"
+    @if ($staticOptions) data-options="{{ json_encode($staticOptions) }}" @endif
+>
     <label class="field-label" for="{{ $triggerId }}">
         {{ $label }}
         @if ($required)

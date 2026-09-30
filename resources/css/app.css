@@ -186,6 +186,12 @@
         box-shadow: var(--shadow-inset);
     }
 
+    .icon-btn:disabled {
+        opacity: 0.4;
+        cursor: not-allowed;
+        transform: none;
+    }
+
     .icon-btn .icon-sun {
         display: none;
     }
@@ -1021,6 +1027,33 @@
         font-weight: 600;
         color: #fff;
         text-decoration: none;
+    }
+
+    /* ---- Ambassador duties carousel ---- */
+    .duties-track {
+        scrollbar-width: none;
+        -ms-overflow-style: none;
+        overscroll-behavior-x: contain;
+    }
+
+    .duties-track::-webkit-scrollbar {
+        display: none;
+    }
+
+    .duties-dot {
+        width: 0.45rem;
+        height: 0.45rem;
+        padding: 0;
+        border: 0;
+        border-radius: 999px;
+        background: color-mix(in oklab, var(--ink) 22%, transparent);
+        cursor: pointer;
+        transition: width 0.25s ease, background 0.25s ease;
+    }
+
+    .duties-dot[data-active='true'] {
+        width: 1.35rem;
+        background: linear-gradient(135deg, var(--accent), var(--accent-deep));
     }
 
     /* ---- Contrast toggle ---- */

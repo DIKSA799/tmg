@@ -96,10 +96,23 @@
                 </div>
 
                 <div class="min-w-0">
-                    <label class="field-label" for="phone">Phone number <span class="req">*</span></label>
+                    <label class="field-label" for="phone">Mobile number <span class="req">*</span></label>
                     <input id="phone" name="phone" type="tel" class="input" placeholder="0800 000 0000" inputmode="tel" autocomplete="tel" required>
                     <p class="field-hint">Stored in +234 format.</p>
                     <p class="field-error" data-error-for="phone" hidden></p>
+                </div>
+
+                <div class="min-w-0">
+                    <label class="field-label" for="whatsapp">WhatsApp number</label>
+                    <input id="whatsapp" name="whatsapp" type="tel" class="input" placeholder="0800 000 0000" inputmode="tel" autocomplete="tel">
+                    <p class="field-hint">Optional · stored in +234 format.</p>
+                    <p class="field-error" data-error-for="whatsapp" hidden></p>
+                </div>
+
+                <div class="min-w-0">
+                    <label class="field-label" for="email">Email address</label>
+                    <input id="email" name="email" type="email" class="input" placeholder="you@example.com" inputmode="email" autocomplete="email">
+                    <p class="field-error" data-error-for="email" hidden></p>
                 </div>
             </div>
         </fieldset>
@@ -119,10 +132,44 @@
             </div>
         </fieldset>
 
-        {{-- 3 · Status & preferences --}}
-        <fieldset class="space-y-6" data-section="status">
+        {{-- 3 · Volunteer details --}}
+        <fieldset class="space-y-6" data-section="volunteer">
             <legend class="flex items-center gap-3">
                 <span class="flex h-8 w-8 items-center justify-center rounded-full bg-[color:var(--accent-soft)] font-display text-sm font-bold text-[color:var(--accent-ink)]">3</span>
+                <span class="font-display text-lg font-bold">Volunteer details</span>
+            </legend>
+
+            <div class="grid gap-5 sm:grid-cols-2">
+                <x-combobox
+                    name="volunteer_category"
+                    label="Volunteer category"
+                    placeholder="Select a category…"
+                    hint="Choose where you can help most."
+                    :options="\App\Enums\VolunteerCategory::options()"
+                />
+
+                <x-combobox
+                    name="occupation"
+                    label="Occupation"
+                    placeholder="Select your occupation…"
+                    :options="\App\Enums\Occupation::options()"
+                />
+
+                <div class="min-w-0 sm:col-span-2">
+                    <span class="field-label">Do you have a disability? <span class="req">*</span></span>
+                    <div class="segments max-w-sm">
+                        <label class="segment"><input type="radio" name="has_disability" value="1"><span>Yes</span></label>
+                        <label class="segment"><input type="radio" name="has_disability" value="0" checked><span>No</span></label>
+                    </div>
+                    <p class="field-error" data-error-for="has_disability" hidden></p>
+                </div>
+            </div>
+        </fieldset>
+
+        {{-- 4 · Status & preferences --}}
+        <fieldset class="space-y-6" data-section="status">
+            <legend class="flex items-center gap-3">
+                <span class="flex h-8 w-8 items-center justify-center rounded-full bg-[color:var(--accent-soft)] font-display text-sm font-bold text-[color:var(--accent-ink)]">4</span>
                 <span class="font-display text-lg font-bold">Voter status &amp; preferences</span>
             </legend>
 
@@ -185,10 +232,10 @@
             </div>
         </fieldset>
 
-        {{-- 4 · Consent --}}
+        {{-- 5 · Consent --}}
         <fieldset class="space-y-6" data-section="consent">
             <legend class="flex items-center gap-3">
-                <span class="flex h-8 w-8 items-center justify-center rounded-full bg-[color:var(--accent-soft)] font-display text-sm font-bold text-[color:var(--accent-ink)]">4</span>
+                <span class="flex h-8 w-8 items-center justify-center rounded-full bg-[color:var(--accent-soft)] font-display text-sm font-bold text-[color:var(--accent-ink)]">5</span>
                 <span class="font-display text-lg font-bold">Consent</span>
             </legend>
 

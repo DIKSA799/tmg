@@ -14,7 +14,7 @@
                 </a>
 
                 <div class="flex flex-none items-center gap-2">
-                    <x-auth-actions :always="true" />
+                    <x-auth-actions />
                     <x-theme-toggle />
                     <a href="{{ route('home') }}" class="btn btn-ghost !px-4 !py-2.5 text-sm">Back to home</a>
                 </div>

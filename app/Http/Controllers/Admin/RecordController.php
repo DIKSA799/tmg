@@ -4,9 +4,11 @@ namespace App\Http\Controllers\Admin;
 
 use App\Enums\AgeBand;
 use App\Enums\Gender;
+use App\Enums\Occupation;
 use App\Enums\PreferredChannel;
 use App\Enums\PvcStatus;
 use App\Enums\RegisteredVoterStatus;
+use App\Enums\VolunteerCategory;
 use App\Http\Controllers\Controller;
 use App\Models\Lga;
 use App\Models\State;
@@ -27,6 +29,8 @@ class RecordController extends Controller
             'age_band' => ['nullable', Rule::enum(AgeBand::class)],
             'pvc_status' => ['nullable', Rule::enum(PvcStatus::class)],
             'voter_status' => ['nullable', Rule::enum(RegisteredVoterStatus::class)],
+            'volunteer_category' => ['nullable', Rule::enum(VolunteerCategory::class)],
+            'occupation' => ['nullable', Rule::enum(Occupation::class)],
             'consent' => ['nullable', Rule::in(['contact', 'data'])],
         ]);
 
@@ -41,6 +45,8 @@ class RecordController extends Controller
             ->when($filters['age_band'] ?? null, fn ($query, string $band) => $query->where('age_band', $band))
             ->when($filters['pvc_status'] ?? null, fn ($query, string $pvc) => $query->where('pvc_status', $pvc))
             ->when($filters['voter_status'] ?? null, fn ($query, string $status) => $query->where('registered_voter_status', $status))
+            ->when($filters['volunteer_category'] ?? null, fn ($query, string $category) => $query->where('volunteer_category', $category))
+            ->when($filters['occupation'] ?? null, fn ($query, string $occupation) => $query->where('occupation', $occupation))
             ->when($filters['consent'] ?? null, fn ($query, string $consent) => $query->where($consent === 'contact' ? 'consent_to_contact' : 'consent_to_data', true))
             ->orderByDesc('created_at')
             ->orderByDesc('id')
@@ -58,6 +64,8 @@ class RecordController extends Controller
                 'pvc_status' => PvcStatus::options(),
                 'voter_status' => RegisteredVoterStatus::options(),
                 'channel' => PreferredChannel::options(),
+                'volunteer_category' => VolunteerCategory::options(),
+                'occupation' => Occupation::options(),
             ],
         ]);
     }
