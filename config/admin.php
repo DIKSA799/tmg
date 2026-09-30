@@ -28,7 +28,7 @@ return [
         'name' => env('ADMIN_NAME', 'TMG Administrator'),
         'username' => env('ADMIN_USERNAME', 'tmgadmin'),
         'email' => env('ADMIN_EMAIL', 'admin@tmg.local'),
-        'password' => env('ADMIN_PASSWORD', 'Admin#TMG2026'),
+        'password' => env('ADMIN_PASSWORD', 'TmgConsole!2026'),
     ],
 
     /*

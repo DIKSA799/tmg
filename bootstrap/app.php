@@ -12,8 +12,17 @@ return Application::configure(basePath: dirname(__DIR__))
         health: '/up',
     )
     ->withMiddleware(function (Middleware $middleware): void {
-        $middleware->redirectGuestsTo(fn () => route('login'));
-        $middleware->redirectUsersTo('/');
+        // Config is not bound yet while middleware registers, so resolve the
+        // console path lazily inside each redirect closure.
+        $consolePath = fn (): string => trim((string) config('admin.path'), '/') ?: 'admin';
+
+        $middleware->redirectGuestsTo(fn (Request $request) => $request->is($consolePath()) || $request->is($consolePath().'/*')
+            ? route('admin.login')
+            : route('login'));
+
+        $middleware->redirectUsersTo(fn (Request $request) => $request->is($consolePath()) || $request->is($consolePath().'/*')
+            ? route('admin.dashboard')
+            : '/');
     })
     ->withExceptions(function (Exceptions $exceptions): void {
         $exceptions->shouldRenderJsonWhen(

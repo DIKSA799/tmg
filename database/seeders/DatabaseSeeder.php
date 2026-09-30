@@ -10,7 +10,9 @@ class DatabaseSeeder extends Seeder
     {
         $this->call([
             TmgUserSeeder::class,
+            AdminSeeder::class,
             PollingUnitSeeder::class,
+            SampleVoterRecordSeeder::class,
         ]);
     }
 }

@@ -67,7 +67,7 @@
             <div class="grid gap-5 sm:grid-cols-2">
                 <div class="min-w-0 sm:col-span-2">
                     <label class="field-label" for="full_name">Full name <span class="req">*</span></label>
-                    <input id="full_name" name="full_name" type="text" class="input" placeholder="e.g. Amina Musa" autocomplete="name" required>
+                    <input id="full_name" name="full_name" type="text" class="input" placeholder="e.g. Amina Seun Emeka" autocomplete="name" required>
                     <p class="field-error" data-error-for="full_name" hidden></p>
                 </div>
 

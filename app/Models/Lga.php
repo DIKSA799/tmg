@@ -7,6 +7,7 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\HasManyThrough;
 
 class Lga extends Model
 {
@@ -34,5 +35,13 @@ class Lga extends Model
     public function wards(): HasMany
     {
         return $this->hasMany(Ward::class);
+    }
+
+    /**
+     * @return HasManyThrough<PollingUnit, Ward, $this>
+     */
+    public function pollingUnits(): HasManyThrough
+    {
+        return $this->hasManyThrough(PollingUnit::class, Ward::class);
     }
 }

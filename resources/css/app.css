@@ -1062,6 +1062,482 @@
         --line: rgba(255, 255, 255, 0.24);
     }
 
+    /* ------------------------------------------------------------------ *
+     *  Operations console
+     * ------------------------------------------------------------------ */
+    .admin-shell {
+        display: grid;
+        grid-template-columns: 16.5rem minmax(0, 1fr);
+        min-height: 100dvh;
+    }
+
+    .admin-sidebar {
+        position: sticky;
+        top: 0;
+        align-self: start;
+        height: 100dvh;
+        display: flex;
+        flex-direction: column;
+        gap: 1.1rem;
+        padding: 1.2rem 1rem;
+        border-right: 1px solid var(--line);
+        background: color-mix(in oklab, var(--paper-raised) 72%, transparent);
+        -webkit-backdrop-filter: blur(14px);
+        backdrop-filter: blur(14px);
+    }
+
+    .admin-brand {
+        display: flex;
+        align-items: center;
+        gap: 0.7rem;
+        padding: 0.25rem 0.35rem;
+        text-decoration: none;
+    }
+
+    .admin-brand img {
+        height: 2.2rem;
+        width: auto;
+        max-width: 5.5rem;
+        object-fit: contain;
+    }
+
+    .admin-brand-name {
+        font-family: var(--font-display);
+        font-size: 0.88rem;
+        font-weight: 700;
+        line-height: 1.1;
+    }
+
+    .admin-brand-sub {
+        font-size: 0.6rem;
+        font-weight: 600;
+        letter-spacing: 0.16em;
+        text-transform: uppercase;
+        color: var(--ink-mute);
+    }
+
+    .admin-nav {
+        display: flex;
+        flex-direction: column;
+        gap: 0.25rem;
+    }
+
+    .admin-nav-link {
+        display: flex;
+        align-items: center;
+        gap: 0.7rem;
+        padding: 0.68rem 0.8rem;
+        border-radius: 0.85rem;
+        font-size: 0.86rem;
+        font-weight: 600;
+        color: var(--ink-soft);
+        text-decoration: none;
+        transition: background 0.16s ease, color 0.16s ease, transform 0.16s ease;
+    }
+
+    .admin-nav-link:hover {
+        transform: translateX(2px);
+        background: color-mix(in oklab, var(--accent) 12%, transparent);
+        color: var(--ink);
+    }
+
+    .admin-nav-link.is-active {
+        background: linear-gradient(135deg, var(--accent), var(--accent-deep));
+        color: #fff;
+        box-shadow: 0 12px 26px -14px color-mix(in oklab, var(--accent) 85%, black);
+    }
+
+    .admin-sidebar-foot {
+        margin-top: auto;
+        display: flex;
+        flex-direction: column;
+        gap: 0.6rem;
+        padding-top: 0.9rem;
+        border-top: 1px solid var(--line);
+    }
+
+    .admin-main {
+        display: flex;
+        flex-direction: column;
+        min-width: 0;
+    }
+
+    .admin-topbar {
+        display: flex;
+        flex-wrap: wrap;
+        align-items: center;
+        justify-content: space-between;
+        gap: 1rem;
+        padding: 1.15rem 1.5rem;
+        border-bottom: 1px solid var(--line);
+        background: color-mix(in oklab, var(--paper) 82%, transparent);
+        -webkit-backdrop-filter: blur(12px);
+        backdrop-filter: blur(12px);
+        position: sticky;
+        top: 0;
+        z-index: 20;
+    }
+
+    .admin-title {
+        margin: 0;
+        font-family: var(--font-display);
+        font-size: 1.3rem;
+        font-weight: 700;
+        letter-spacing: -0.02em;
+    }
+
+    .admin-sub {
+        margin: 0.2rem 0 0;
+        font-size: 0.76rem;
+        color: var(--ink-mute);
+    }
+
+    .admin-content {
+        display: flex;
+        flex-direction: column;
+        gap: 1.15rem;
+        padding: 1.5rem;
+    }
+
+    .admin-card {
+        border: 1px solid var(--line);
+        border-radius: 20px;
+        background: color-mix(in oklab, var(--paper-raised) 55%, transparent);
+        -webkit-backdrop-filter: blur(16px);
+        backdrop-filter: blur(16px);
+        padding: 1.15rem;
+    }
+
+    .admin-card-title {
+        margin: 0;
+        font-family: var(--font-display);
+        font-size: 0.95rem;
+        font-weight: 700;
+    }
+
+    .admin-card-sub {
+        margin: 0.15rem 0 0.9rem;
+        font-size: 0.72rem;
+        color: var(--ink-mute);
+    }
+
+    .admin-grid {
+        display: grid;
+        gap: 0.9rem;
+    }
+
+    .admin-kpis {
+        grid-template-columns: repeat(auto-fit, minmax(10.5rem, 1fr));
+    }
+
+    .admin-kpi {
+        position: relative;
+        overflow: hidden;
+        border: 1px solid var(--line);
+        border-radius: 18px;
+        background: color-mix(in oklab, var(--paper-raised) 60%, transparent);
+        padding: 1rem 1.05rem;
+        transition: transform 0.2s cubic-bezier(0.22, 1, 0.36, 1), border-color 0.2s ease;
+    }
+
+    .admin-kpi:hover {
+        transform: translateY(-3px);
+        border-color: color-mix(in oklab, var(--accent) 45%, transparent);
+    }
+
+    .admin-kpi::after {
+        content: '';
+        position: absolute;
+        inset: auto -30% -60% auto;
+        width: 8rem;
+        height: 8rem;
+        border-radius: 50%;
+        background: radial-gradient(circle, color-mix(in oklab, var(--accent) 22%, transparent), transparent 70%);
+        pointer-events: none;
+    }
+
+    .admin-kpi-label {
+        display: block;
+        font-size: 0.66rem;
+        font-weight: 700;
+        letter-spacing: 0.14em;
+        text-transform: uppercase;
+        color: var(--ink-mute);
+    }
+
+    .admin-kpi-value {
+        display: block;
+        margin-top: 0.35rem;
+        font-family: var(--font-display);
+        font-size: 1.8rem;
+        font-weight: 700;
+        letter-spacing: -0.035em;
+        font-variant-numeric: tabular-nums;
+    }
+
+    .admin-kpi-note {
+        display: block;
+        margin-top: 0.25rem;
+        font-size: 0.7rem;
+        color: var(--ink-mute);
+    }
+
+    .chart-box {
+        position: relative;
+        height: 15.5rem;
+    }
+
+    .chart-box-sm {
+        height: 12.5rem;
+    }
+
+    .admin-table-wrap {
+        overflow-x: auto;
+        border: 1px solid var(--line);
+        border-radius: 16px;
+    }
+
+    .admin-table {
+        width: 100%;
+        border-collapse: collapse;
+        font-size: 0.83rem;
+    }
+
+    .admin-table th {
+        position: sticky;
+        top: 0;
+        z-index: 1;
+        padding: 0.7rem 0.9rem;
+        text-align: left;
+        white-space: nowrap;
+        font-size: 0.64rem;
+        font-weight: 700;
+        letter-spacing: 0.12em;
+        text-transform: uppercase;
+        color: var(--ink-mute);
+        background: var(--paper-raised);
+        border-bottom: 1px solid var(--line);
+    }
+
+    .admin-table td {
+        padding: 0.68rem 0.9rem;
+        white-space: nowrap;
+        border-bottom: 1px solid color-mix(in oklab, var(--line) 55%, transparent);
+    }
+
+    .admin-table tbody tr {
+        transition: background 0.14s ease;
+    }
+
+    .admin-table tbody tr:hover {
+        background: color-mix(in oklab, var(--accent) 8%, transparent);
+    }
+
+    .admin-table .num {
+        font-variant-numeric: tabular-nums;
+    }
+
+    .admin-progress {
+        height: 0.45rem;
+        border-radius: 999px;
+        background: color-mix(in oklab, var(--ink) 14%, transparent);
+        overflow: hidden;
+    }
+
+    .admin-progress > span {
+        display: block;
+        height: 100%;
+        border-radius: 999px;
+        width: 0;
+        background: linear-gradient(90deg, var(--accent), var(--accent-deep));
+        transition: width 0.9s cubic-bezier(0.22, 1, 0.36, 1);
+    }
+
+    .live-dot {
+        position: relative;
+        display: inline-block;
+        flex: none;
+        width: 0.5rem;
+        height: 0.5rem;
+        border-radius: 999px;
+        background: #2fd07f;
+    }
+
+    .live-dot::after {
+        content: '';
+        position: absolute;
+        inset: 0;
+        border-radius: 999px;
+        background: #2fd07f;
+        animation: livePulse 1.9s ease-out infinite;
+    }
+
+    .admin-pill {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.4rem;
+        border-radius: 999px;
+        border: 1px solid var(--line);
+        background: color-mix(in oklab, var(--paper-raised) 65%, transparent);
+        padding: 0.3rem 0.7rem;
+        font-size: 0.7rem;
+        font-weight: 600;
+        color: var(--ink-soft);
+    }
+
+    .admin-range {
+        display: inline-flex;
+        gap: 0.2rem;
+        padding: 0.22rem;
+        border-radius: 999px;
+        border: 1px solid var(--line);
+        background: color-mix(in oklab, var(--paper-raised) 55%, transparent);
+    }
+
+    .admin-range button {
+        border: 0;
+        background: transparent;
+        color: var(--ink-soft);
+        font-size: 0.72rem;
+        font-weight: 700;
+        letter-spacing: 0.04em;
+        padding: 0.42rem 0.7rem;
+        border-radius: 999px;
+        cursor: pointer;
+        transition: background 0.16s ease, color 0.16s ease;
+    }
+
+    .admin-range button.is-active {
+        background: linear-gradient(135deg, var(--accent), var(--accent-deep));
+        color: #fff;
+    }
+
+    .admin-input {
+        width: 100%;
+        border-radius: 12px;
+        border: 1px solid var(--line);
+        background: color-mix(in oklab, var(--paper) 80%, transparent);
+        padding: 0.6rem 0.75rem;
+        font-size: 0.82rem;
+        color: var(--ink);
+    }
+
+    .admin-input:focus {
+        outline: none;
+        border-color: color-mix(in oklab, var(--accent) 55%, transparent);
+        box-shadow: 0 0 0 3px color-mix(in oklab, var(--accent) 18%, transparent);
+    }
+
+    select.admin-input {
+        appearance: none;
+        -webkit-appearance: none;
+        background-image: linear-gradient(45deg, transparent 50%, var(--ink-soft) 50%),
+            linear-gradient(135deg, var(--ink-soft) 50%, transparent 50%);
+        background-position: calc(100% - 1.1rem) 1.05rem, calc(100% - 0.85rem) 1.05rem;
+        background-size: 0.28rem 0.28rem, 0.28rem 0.28rem;
+        background-repeat: no-repeat;
+        padding-right: 2rem;
+    }
+
+    .admin-login-wrap {
+        display: grid;
+        place-items: center;
+        min-height: 100dvh;
+        padding: 1.5rem;
+    }
+
+    .admin-login-card {
+        width: min(24rem, 100%);
+        border: 1px solid var(--line);
+        border-radius: 26px;
+        background: color-mix(in oklab, var(--paper-raised) 70%, transparent);
+        -webkit-backdrop-filter: blur(20px);
+        backdrop-filter: blur(20px);
+        box-shadow: var(--shadow-glass);
+        padding: 1.9rem;
+    }
+
+    .admin-pagination {
+        display: flex;
+        flex-wrap: wrap;
+        align-items: center;
+        justify-content: space-between;
+        gap: 0.75rem;
+        font-size: 0.78rem;
+        color: var(--ink-mute);
+    }
+
+    .admin-pagination nav {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 0.3rem;
+    }
+
+    .admin-pagination a,
+    .admin-pagination span[aria-current] {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        min-width: 2rem;
+        height: 2rem;
+        padding: 0 0.5rem;
+        border-radius: 10px;
+        border: 1px solid var(--line);
+        text-decoration: none;
+        color: var(--ink-soft);
+    }
+
+    .admin-pagination span[aria-current] {
+        background: linear-gradient(135deg, var(--accent), var(--accent-deep));
+        border-color: transparent;
+        color: #fff;
+        font-weight: 700;
+    }
+
+    @keyframes livePulse {
+        0% {
+            transform: scale(1);
+            opacity: 0.75;
+        }
+        100% {
+            transform: scale(2.8);
+            opacity: 0;
+        }
+    }
+
+    @media (max-width: 1024px) {
+        .admin-shell {
+            grid-template-columns: 1fr;
+        }
+
+        .admin-sidebar {
+            position: static;
+            height: auto;
+            flex-direction: row;
+            align-items: center;
+            gap: 0.75rem;
+            overflow-x: auto;
+            border-right: 0;
+            border-bottom: 1px solid var(--line);
+        }
+
+        .admin-nav {
+            flex-direction: row;
+        }
+
+        .admin-sidebar-foot {
+            margin: 0 0 0 auto;
+            flex-direction: row;
+            align-items: center;
+            border-top: 0;
+            padding-top: 0;
+        }
+
+        .admin-content {
+            padding: 1.1rem;
+        }
+    }
+
     @media (max-width: 900px) {
         .info-strip {
             grid-template-columns: 1fr;

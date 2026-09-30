@@ -6,6 +6,7 @@ use Database\Factories\StateFactory;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\HasManyThrough;
 
 class State extends Model
 {
@@ -27,18 +28,10 @@ class State extends Model
     }
 
     /**
-     * @return HasMany<Ward, $this>
+     * @return HasManyThrough<Ward, Lga, $this>
      */
-    public function wards(): HasMany
+    public function wards(): HasManyThrough
     {
-        return $this->hasMany(Ward::class);
-    }
-
-    /**
-     * @return HasMany<PollingUnit, $this>
-     */
-    public function pollingUnits(): HasMany
-    {
-        return $this->hasMany(PollingUnit::class);
+        return $this->hasManyThrough(Ward::class, Lga::class);
     }
 }
