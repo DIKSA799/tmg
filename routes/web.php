@@ -5,6 +5,7 @@ use App\Http\Controllers\Admin\GeographyController as AdminGeographyController;
 use App\Http\Controllers\Admin\LoginController as AdminLoginController;
 use App\Http\Controllers\Admin\RecordController as AdminRecordController;
 use App\Http\Controllers\GeographyController;
+use App\Http\Controllers\LandingController;
 use App\Http\Controllers\LoginController;
 use App\Http\Controllers\RegisterController;
 use App\Http\Controllers\VoterRecordController;
