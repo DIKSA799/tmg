@@ -28,6 +28,13 @@ class RegisterPageTest extends TestCase
         $response->assertSee('Volunteer to Save Nigeria', false);
         $response->assertSee("Support TMG's chosen candidate, Atiku Abubakar.", false);
         $response->assertSee('name="full_name"', false);
+        $response->assertSee('name="whatsapp"', false);
+        $response->assertSee('name="email"', false);
+        $response->assertSee('name="volunteer_category"', false);
+        $response->assertSee('name="occupation"', false);
+        $response->assertSee('name="has_disability"', false);
+        $response->assertSee('Do you have a disability?', false);
+        $response->assertSee('Grassroots Mobilisation', false);
         $response->assertSee('name="polling_unit_id"', false);
         $response->assertSee('data-theme-toggle', false);
     }

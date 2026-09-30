@@ -71,6 +71,26 @@
         </div>
 
         <div>
+            <label class="field-label" for="f-category">Volunteer category</label>
+            <select id="f-category" class="admin-input" name="volunteer_category">
+                <option value="">Any</option>
+                @foreach ($options['volunteer_category'] as $value => $label)
+                    <option value="{{ $value }}" @selected(($filters['volunteer_category'] ?? null) === $value)>{{ $label }}</option>
+                @endforeach
+            </select>
+        </div>
+
+        <div>
+            <label class="field-label" for="f-occupation">Occupation</label>
+            <select id="f-occupation" class="admin-input" name="occupation">
+                <option value="">Any</option>
+                @foreach ($options['occupation'] as $value => $label)
+                    <option value="{{ $value }}" @selected(($filters['occupation'] ?? null) === $value)>{{ $label }}</option>
+                @endforeach
+            </select>
+        </div>
+
+        <div>
             <label class="field-label" for="f-consent">Consent</label>
             <select id="f-consent" class="admin-input" name="consent">
                 <option value="">Any</option>
@@ -92,6 +112,8 @@
                     <tr>
                         <th scope="col">Name</th>
                         <th scope="col">Phone</th>
+                        <th scope="col">WhatsApp</th>
+                        <th scope="col">Email</th>
                         <th scope="col">Gender</th>
                         <th scope="col">Age</th>
                         <th scope="col">State</th>
@@ -100,6 +122,9 @@
                         <th scope="col">Polling unit</th>
                         <th scope="col">PVC</th>
                         <th scope="col">Registered</th>
+                        <th scope="col">Volunteer category</th>
+                        <th scope="col">Occupation</th>
+                        <th scope="col">Disability</th>
                         <th scope="col">Consent</th>
                         <th scope="col">Captured</th>
                     </tr>
@@ -109,6 +134,8 @@
                         <tr>
                             <td>{{ $record->full_name }}</td>
                             <td class="num">{{ $record->phone }}</td>
+                            <td class="num">{{ $record->whatsapp ?? '—' }}</td>
+                            <td>{{ $record->email ?? '—' }}</td>
                             <td>{{ \App\Enums\Gender::tryFrom($record->gender)?->label() ?? $record->gender }}</td>
                             <td class="num">{{ \App\Enums\AgeBand::tryFrom($record->age_band)?->label() ?? $record->age_band }}</td>
                             <td>{{ $record->state?->name }}</td>
@@ -117,6 +144,9 @@
                             <td>{{ $record->pollingUnit?->name }}</td>
                             <td>{{ \App\Enums\PvcStatus::tryFrom($record->pvc_status)?->label() ?? $record->pvc_status }}</td>
                             <td>{{ \App\Enums\RegisteredVoterStatus::tryFrom($record->registered_voter_status)?->label() ?? $record->registered_voter_status }}</td>
+                            <td>{{ \App\Enums\VolunteerCategory::tryFrom($record->volunteer_category)?->label() ?? '—' }}</td>
+                            <td>{{ \App\Enums\Occupation::tryFrom($record->occupation)?->label() ?? '—' }}</td>
+                            <td>{{ is_null($record->has_disability) ? '—' : ($record->has_disability ? 'Yes' : 'No') }}</td>
                             <td>
                                 <span class="admin-pill">{{ $record->consent_to_contact ? 'Contact' : 'No contact' }}</span>
                             </td>
@@ -124,7 +154,7 @@
                         </tr>
                     @empty
                         <tr>
-                            <td colspan="12" class="py-10 text-center text-[color:var(--ink-mute)]">No records match these filters.</td>
+                            <td colspan="17" class="py-10 text-center text-[color:var(--ink-mute)]">No records match these filters.</td>
                         </tr>
                     @endforelse
                 </tbody>

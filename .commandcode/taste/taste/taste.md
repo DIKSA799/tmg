@@ -6,3 +6,6 @@
 - Wants sample/seed data generated so newly built screens (dashboards, tables) are populated and demoable out of the box. Confidence: 0.4
 - When handed a reference HTML/mockup, expects the fonts to be copied faithfully into the project — same family, exact sizes, weights and tracking — not just an approximation of the "vibe". Confidence: 0.55
 - Prefers one sans family used for both body and display text (no separate display face), at very heavy weights (800–900) with tight negative letter-spacing and uppercase headlines. Confidence: 0.45
+- When porting an existing reference (static HTML/CSS/JS) into the project, wants a faithful "direct copy and paste" port: preserve the markup, styles, content, copy and behaviour exactly as the source, translated only into the framework's idioms (e.g. Blade components, `asset()`/`route()`, Vite entries) rather than redesigned or "improved". Confidence: 0.7
+- Wants informational content presented attractively but kept compact — explicitly "not too bulky or distracting" — using scroll/carousel patterns and tasteful animation to keep the extra information discoverable without dominating the page. Confidence: 0.6
+- Cares that mobile layouts have no horizontal overflow / cramped rows (e.g. flagging crowded nav rows and elements that spill off-screen). Confidence: 0.4

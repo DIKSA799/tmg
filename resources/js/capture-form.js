@@ -131,19 +131,30 @@ export function initCaptureForm() {
         polling_unit_id: () => {},
     };
 
+    const loadStaticOptions = (root) => {
+        if (!root?.dataset.options) {
+            return;
+        }
+
+        const select = box(root.dataset.name);
+
+        if (!select) {
+            return;
+        }
+
+        try {
+            select.setOptions(JSON.parse(root.dataset.options), { autoSelect: false });
+        } catch {
+            // Malformed option data is ignored; the combobox keeps its placeholder.
+        }
+    };
+
     document.querySelectorAll('[data-combobox]').forEach((root) => {
         const name = root.dataset.name;
         boxes.set(name, new SearchSelect(root, {
             onChange: (value) => handlers[name]?.(value),
         }));
-
-        if (root.dataset.options) {
-            try {
-                box(name).setOptions(JSON.parse(root.dataset.options), { autoSelect: false });
-            } catch {
-                // Malformed option data is ignored; the combobox keeps its placeholder.
-            }
-        }
+        loadStaticOptions(root);
     });
 
     async function primeStates() {
@@ -350,7 +361,10 @@ export function initCaptureForm() {
             }
         });
 
-        ['volunteer_category', 'occupation'].forEach((name) => box(name)?.clear());
+        ['volunteer_category', 'occupation'].forEach((name) => {
+            box(name)?.clear();
+            loadStaticOptions(form.querySelector(`[data-combobox][data-name="${name}"]`));
+        });
 
         ['age_band', 'registered_voter_status', 'pvc_status', 'preferred_language', 'preferred_channel'].forEach((name) => {
             const select = form.querySelector(`[name="${name}"]`);

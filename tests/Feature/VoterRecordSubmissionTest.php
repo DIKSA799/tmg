@@ -40,6 +40,11 @@ class VoterRecordSubmissionTest extends TestCase
             'gender' => 'female',
             'age_band' => '25-34',
             'phone' => '0800 000 0000',
+            'whatsapp' => '0803 000 0000',
+            'email' => 'amina@example.com',
+            'volunteer_category' => 'grassroots_mobilisation',
+            'occupation' => 'student',
+            'has_disability' => false,
             'state_id' => $state->id,
             'lga_id' => $lga->id,
             'ward_id' => $ward->id,
@@ -81,6 +86,35 @@ class VoterRecordSubmissionTest extends TestCase
         $this->operator()->postJson('/submissions', $this->payload(['phone' => '0803 123 4567']))->assertCreated();
 
         $this->assertDatabaseHas('voter_records', ['phone' => '+2348031234567']);
+    }
+
+    public function test_whatsapp_is_normalised_to_international_format(): void
+    {
+        $this->operator()->postJson('/submissions', $this->payload(['whatsapp' => '0805 123 4567']))->assertCreated();
+
+        $this->assertDatabaseHas('voter_records', ['whatsapp' => '+2348051234567']);
+    }
+
+    public function test_volunteer_details_are_persisted(): void
+    {
+        $this->operator()->postJson('/submissions', $this->payload([
+            'volunteer_category' => 'digital_social_media',
+            'occupation' => 'ict_technology',
+            'has_disability' => true,
+        ]))->assertCreated();
+
+        $this->assertDatabaseHas('voter_records', [
+            'volunteer_category' => 'digital_social_media',
+            'occupation' => 'ict_technology',
+            'has_disability' => true,
+        ]);
+    }
+
+    public function test_invalid_volunteer_category_returns_422(): void
+    {
+        $this->operator()->postJson('/submissions', $this->payload(['volunteer_category' => 'not-a-category']))
+            ->assertStatus(422)
+            ->assertJsonValidationErrors('volunteer_category');
     }
 
     public function test_ip_address_and_device_context_are_captured(): void
