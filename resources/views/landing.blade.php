@@ -14,19 +14,19 @@
         <header class="fixed left-1/2 top-4 z-[60] w-[min(1180px,calc(100%-2rem))] -translate-x-1/2">
             <nav class="glass grid grid-cols-[auto_1fr_auto] items-center gap-3 rounded-[22px] px-3 py-2.5" aria-label="Primary">
                 <a href="{{ route('home') }}" class="flex min-w-0 items-center" aria-label="Tinubu Must Go — home">
-                    <img src="{{ asset('t2.png') }}" alt="Tinubu Must Go" width="2413" height="2875" class="brand-logo" draggable="false">
+                    <img src="{{ asset('favicon.png') }}" alt="Tinubu Must Go" width="2413" height="2875" class="brand-logo" draggable="false">
                 </a>
 
                 <div class="hidden justify-center gap-1 md:flex">
-                    <button type="button" class="rounded-xl px-3 py-2.5 text-[0.72rem] font-bold uppercase tracking-[0.08em] text-[color:var(--ink-soft)] transition hover:bg-[color:var(--paper-raised)] hover:text-[color:var(--ink)]" data-open="about">Information</button>
-                    <button type="button" class="rounded-xl px-3 py-2.5 text-[0.72rem] font-bold uppercase tracking-[0.08em] text-[color:var(--ink-soft)] transition hover:bg-[color:var(--paper-raised)] hover:text-[color:var(--ink)]" data-open="downloads">Downloads</button>
-                    <button type="button" class="rounded-xl px-3 py-2.5 text-[0.72rem] font-bold uppercase tracking-[0.08em] text-[color:var(--ink-soft)] transition hover:bg-[color:var(--paper-raised)] hover:text-[color:var(--ink)]" data-open="privacy">Privacy</button>
+                    <button type="button" class="rounded-xl px-3 py-2.5 text-[0.78rem] font-extrabold uppercase tracking-[0.08em] text-[color:var(--ink-soft)] transition hover:bg-[color:var(--paper-raised)] hover:text-[color:var(--ink)]" data-open="about">Information</button>
+                    <button type="button" class="rounded-xl px-3 py-2.5 text-[0.78rem] font-extrabold uppercase tracking-[0.08em] text-[color:var(--ink-soft)] transition hover:bg-[color:var(--paper-raised)] hover:text-[color:var(--ink)]" data-open="downloads">Downloads</button>
+                    <button type="button" class="rounded-xl px-3 py-2.5 text-[0.78rem] font-extrabold uppercase tracking-[0.08em] text-[color:var(--ink-soft)] transition hover:bg-[color:var(--paper-raised)] hover:text-[color:var(--ink)]" data-open="privacy">Privacy</button>
                 </div>
 
                 <div class="flex flex-none items-center gap-2">
                     <x-auth-actions />
                     <x-theme-toggle />
-                    <a href="{{ route('register') }}" class="btn btn-primary !px-4 !py-2.5 text-[0.72rem] font-bold uppercase tracking-[0.08em]">Register</a>
+                    <a href="{{ route('register') }}" class="btn btn-primary !px-4 !py-2.5 text-[0.78rem] font-black uppercase tracking-[0.08em]">Register</a>
                 </div>
             </nav>
         </header>
@@ -53,10 +53,10 @@
                     </p>
 
                     <div class="mt-8 flex flex-wrap gap-3">
-                        <button type="button" class="btn btn-primary" data-open="about">
+                        <button type="button" class="btn btn-primary font-extrabold tracking-[0.04em]" data-open="about">
                             Movement information <span aria-hidden="true">↗</span>
                         </button>
-                        <button type="button" class="btn btn-ghost" data-open="downloads">
+                        <button type="button" class="btn btn-ghost font-extrabold tracking-[0.04em]" data-open="downloads">
                             <span aria-hidden="true">↓</span> Brand assets
                         </button>
                     </div>
