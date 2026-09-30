@@ -23,10 +23,10 @@
                     <button type="button" class="rounded-xl px-3 py-2.5 text-[0.78rem] font-extrabold uppercase tracking-[0.08em] text-[color:var(--ink-soft)] transition hover:bg-[color:var(--paper-raised)] hover:text-[color:var(--ink)]" data-open="privacy">Privacy</button>
                 </div>
 
-                <div class="flex flex-none items-center gap-2">
+                <div class="col-start-3 flex flex-none items-center justify-self-end gap-2">
                     <x-auth-actions />
                     <x-theme-toggle />
-                    <a href="{{ route('register') }}" class="btn btn-primary !px-4 !py-2.5 text-[0.78rem] font-black uppercase tracking-[0.08em]">Register</a>
+                    <a href="{{ route('register') }}" class="btn btn-primary !px-5 !py-3 text-[0.8rem] font-black uppercase tracking-[0.08em]">Register</a>
                 </div>
             </nav>
         </header>
