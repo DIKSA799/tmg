@@ -720,7 +720,7 @@
         margin: 0;
         max-width: 770px;
         font-family: var(--font-display);
-        font-size: clamp(4.6rem, 9.2vw, 7.75rem);
+        font-size: clamp(4.6rem, 9.2vw, 9.5rem);
         font-weight: 900;
         line-height: 0.78;
         letter-spacing: -0.075em;
@@ -763,12 +763,12 @@
         position: relative;
         display: grid;
         place-items: center;
-        min-height: 27rem;
+        min-height: 33rem;
     }
 
     .halo {
         position: absolute;
-        width: 78%;
+        width: 86%;
         aspect-ratio: 1;
         border-radius: 50%;
         background: radial-gradient(circle, color-mix(in oklab, var(--flag-red) 20%, transparent), transparent 70%);
@@ -778,7 +778,7 @@
 
     .orbit {
         position: absolute;
-        width: 92%;
+        width: 100%;
         aspect-ratio: 1;
         border-radius: 50%;
         border: 1px dashed color-mix(in oklab, var(--ink) 15%, transparent);
@@ -801,7 +801,7 @@
         position: relative;
         width: auto;
         max-width: 100%;
-        max-height: 29rem;
+        max-height: 37.5rem;
         object-fit: contain;
         filter: drop-shadow(0 30px 44px color-mix(in oklab, var(--ink) 20%, transparent));
         animation: float 6s ease-in-out infinite;
@@ -1559,11 +1559,11 @@
 
         .logo-stage {
             order: -1;
-            min-height: 19rem;
+            min-height: 23rem;
         }
 
         .hero-logo {
-            max-height: 19rem;
+            max-height: 23rem;
         }
 
         .asset-grid {
