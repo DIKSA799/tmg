@@ -1,3 +1,4 @@
+import { initDutiesCarousel } from './ambassador-intro';
 import { initCaptureForm } from './capture-form';
 import { initLiveInfo } from './live-info';
 import { initModals } from './modals';
@@ -13,6 +14,7 @@ function boot() {
     initScramble();
     initNavSpy();
     initLiveInfo();
+    initDutiesCarousel();
     initCaptureForm();
 }
 

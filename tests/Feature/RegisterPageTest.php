@@ -24,6 +24,9 @@ class RegisterPageTest extends TestCase
 
         $response->assertOk();
         $response->assertSee('Be part of #TMG', false);
+        $response->assertSee('Become a TMG Ambassador', false);
+        $response->assertSee('Volunteer to Save Nigeria', false);
+        $response->assertSee("Support TMG's chosen candidate, Atiku Abubakar.", false);
         $response->assertSee('name="full_name"', false);
         $response->assertSee('name="polling_unit_id"', false);
         $response->assertSee('data-theme-toggle', false);

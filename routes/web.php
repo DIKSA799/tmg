@@ -7,21 +7,20 @@ use App\Http\Controllers\Admin\RecordController as AdminRecordController;
 use App\Http\Controllers\GeographyController;
 use App\Http\Controllers\LoginController;
 use App\Http\Controllers\RegisterController;
-use App\Http\Controllers\RootController;
 use App\Http\Controllers\VoterRecordController;
 use App\Http\Middleware\NoIndex;
 use Illuminate\Support\Facades\Route;
 
 /*
 |--------------------------------------------------------------------------
-| Root gate (temporary)
+| Public landing
 |--------------------------------------------------------------------------
 |
-| The system is closed to authorised operators for now: the root shows the
-| sign-in form to guests and the landing page to signed-in users.
+| The root serves the public TMG Ambassadors Space microsite. Registration
+| itself remains restricted to signed-in operators.
 |
 */
-Route::get('/', RootController::class)->name('home');
+Route::get('/', LandingController::class)->name('home');
 
 Route::middleware('guest')->group(function () {
     Route::get('login', [LoginController::class, 'create'])->name('login');

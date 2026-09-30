@@ -2,7 +2,6 @@
 
 namespace Tests\Feature;
 
-use App\Models\State;
 use App\Models\User;
 use Illuminate\Foundation\Testing\LazilyRefreshDatabase;
 use Tests\TestCase;
@@ -11,71 +10,52 @@ class LandingPageTest extends TestCase
 {
     use LazilyRefreshDatabase;
 
-    public function test_guests_see_the_sign_in_form_at_the_root(): void
+    public function test_the_landing_page_is_public(): void
     {
-        $this->get('/')
-            ->assertOk()
-            ->assertSee('Sign in', false)
-            ->assertDontSee('Movement information', false);
+        $response = $this->get('/');
+
+        $response->assertOk();
+        $response->assertSee('TMG Ambassadors Space', false);
+        $response->assertSee('Become a TMG Ambassador', false);
+        $response->assertSee('Alhaji Atiku Abubakar', false);
+        $response->assertDontSee('Sign in', false);
     }
 
-    public function test_landing_page_renders_the_movement_content_for_signed_in_users(): void
+    public function test_signed_in_users_see_the_same_landing_page(): void
     {
-        State::factory()->create();
-
         $response = $this->actingAs(User::factory()->create())->get('/');
 
         $response->assertOk();
-        $response->assertSee('Tinubu Must Go!', false);
-        $response->assertSee('Movement information', false);
-        $response->assertSee('Downloads / Brand Assets', false);
-        $response->assertSee('Privacy Notice', false);
-        $response->assertSee('A Civic Platform for Accountability, Public Dialogue and Democratic Participation', false);
+        $response->assertSee('TMG Ambassadors Space', false);
     }
 
     public function test_landing_page_publishes_social_preview_metadata(): void
     {
-        State::factory()->create();
-
-        $response = $this->actingAs(User::factory()->create())->get('/');
+        $response = $this->get('/');
 
         $response->assertOk();
-        $response->assertSee('property="og:image" content="'.asset('t1.png').'"', false);
+        $response->assertSee('property="og:image" content="'.asset('assets/og-image.png').'"', false);
         $response->assertSee('twitter:card" content="summary_large_image"', false);
-        $response->assertSee('rel="icon" href="'.asset('favicon-32.png').'"', false);
-        $response->assertSee('rel="apple-touch-icon" href="'.asset('apple-touch-icon.png').'"', false);
+        $response->assertSee('rel="icon" href="'.asset('assets/favicon.png').'"', false);
     }
 
-    public function test_landing_page_uses_the_movement_logo_and_interface_controls(): void
+    public function test_landing_page_uses_the_theme_toggle_and_information_dialogs(): void
     {
-        State::factory()->create();
-
-        $response = $this->actingAs(User::factory()->create())->get('/');
+        $response = $this->get('/');
 
         $response->assertOk();
-        $response->assertSee(asset('t2.png'), false);
-        $response->assertSee('data-contrast-toggle', false);
-        $response->assertSee('data-theme-toggle', false);
-        $response->assertSee('data-scramble', false);
+        $response->assertSee('id="themeToggle"', false);
+        $response->assertSee('data-modal="information"', false);
+        $response->assertSee('data-modal="downloads"', false);
+        $response->assertSee('data-modal="privacy"', false);
     }
 
-    public function test_landing_page_no_longer_hosts_the_capture_form(): void
+    public function test_landing_page_links_to_the_register_page_without_hosting_the_capture_form(): void
     {
-        State::factory()->create();
-
-        $response = $this->actingAs(User::factory()->create())->get('/');
+        $response = $this->get('/');
 
         $response->assertOk();
+        $response->assertSee(route('register'), false);
         $response->assertDontSee('data-capture-form', false);
-    }
-
-    public function test_landing_page_links_to_the_register_page(): void
-    {
-        State::factory()->create();
-
-        $this->actingAs(User::factory()->create())
-            ->get('/')
-            ->assertOk()
-            ->assertSee(route('register'), false);
     }
 }

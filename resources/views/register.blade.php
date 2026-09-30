@@ -32,6 +32,10 @@
         </div>
 
         <div class="mx-auto mt-8 max-w-4xl">
+            @include('partials.ambassador-intro')
+        </div>
+
+        <div class="mx-auto mt-8 max-w-4xl">
             @include('partials.capture-card', ['cardHeading' => 'Voter details'])
         </div>
     </main>
