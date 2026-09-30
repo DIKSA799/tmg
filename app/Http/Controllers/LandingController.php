@@ -2,12 +2,6 @@
 
 namespace App\Http\Controllers;
 
-use App\Enums\AgeBand;
-use App\Enums\Gender;
-use App\Enums\PreferredChannel;
-use App\Enums\PreferredLanguage;
-use App\Enums\PvcStatus;
-use App\Enums\RegisteredVoterStatus;
 use App\Models\Lga;
 use App\Models\PollingUnit;
 use App\Models\State;
@@ -26,14 +20,6 @@ class LandingController extends Controller
                 'wards' => Ward::query()->count(),
                 'polling_units' => PollingUnit::query()->count(),
             ]),
-            'options' => [
-                'gender' => Gender::options(),
-                'age_band' => AgeBand::options(),
-                'registered_voter_status' => RegisteredVoterStatus::options(),
-                'pvc_status' => PvcStatus::options(),
-                'preferred_language' => PreferredLanguage::options(),
-                'preferred_channel' => PreferredChannel::options(),
-            ],
         ]);
     }
 }

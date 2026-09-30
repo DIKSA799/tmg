@@ -2,10 +2,25 @@
 
 use App\Http\Controllers\GeographyController;
 use App\Http\Controllers\LandingController;
+use App\Http\Controllers\LoginController;
+use App\Http\Controllers\RegisterController;
 use App\Http\Controllers\VoterRecordController;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/', LandingController::class)->name('home');
+
+Route::middleware('guest')->group(function () {
+    Route::get('login', [LoginController::class, 'create'])->name('login');
+    Route::post('login', [LoginController::class, 'store'])->name('login.store');
+});
+
+Route::post('logout', [LoginController::class, 'destroy'])
+    ->middleware('auth')
+    ->name('logout');
+
+Route::get('register', RegisterController::class)
+    ->middleware('auth')
+    ->name('register');
 
 Route::prefix('geography')->name('geography.')->group(function () {
     Route::get('states', [GeographyController::class, 'states'])->name('states');

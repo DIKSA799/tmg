@@ -1,0 +1,38 @@
+<x-layouts.app
+    title="Register a voter · Tinubu Must Go"
+    description="Register a voter for the Tinubu Must Go movement — pick the state, LGA, ward and polling unit, then capture the record securely."
+>
+    <header class="pt-3">
+        <div class="shell">
+            <nav class="glass flex items-center justify-between gap-3 rounded-full px-3 py-2" aria-label="Primary">
+                <a href="{{ route('home') }}" class="flex min-w-0 items-center gap-2.5 rounded-full pl-1 pr-2">
+                    <img src="{{ asset('tmg-logo-256.jpg') }}" alt="" width="36" height="36" class="h-9 w-9 flex-none rounded-full bg-white object-contain ring-1 ring-black/5">
+                    <span class="flex min-w-0 flex-col leading-none">
+                        <span class="truncate font-display text-sm font-bold tracking-tight">Tinubu Must Go</span>
+                        <span class="text-[10px] font-medium uppercase tracking-[0.14em] text-[color:var(--ink-mute)]">Nigeria</span>
+                    </span>
+                </a>
+
+                <div class="flex flex-none items-center gap-2">
+                    <x-auth-actions :always="true" />
+                    <x-theme-toggle />
+                    <a href="{{ route('home') }}" class="btn btn-ghost !px-4 !py-2.5 text-sm">Back to home</a>
+                </div>
+            </nav>
+        </div>
+    </header>
+
+    <main class="shell py-10 lg:py-14">
+        <div class="mx-auto max-w-3xl text-center">
+            <span class="chip"><span class="chip-dot" aria-hidden="true"></span> Registration desk</span>
+            <h1 class="mt-5 font-display text-3xl font-bold tracking-tight sm:text-4xl">Register a voter</h1>
+            <p class="mx-auto mt-4 max-w-xl text-sm leading-relaxed text-[color:var(--ink-soft)] sm:text-base">
+                Country is fixed to Nigeria. Choose the state, LGA, ward and polling unit — or share your location and we will pre-fill it for you.
+            </p>
+        </div>
+
+        <div class="mx-auto mt-8 max-w-4xl">
+            @include('partials.capture-card', ['cardHeading' => 'Voter details'])
+        </div>
+    </main>
+</x-layouts.app>

@@ -22,4 +22,14 @@ class LandingPageTest extends TestCase
         $response->assertSee('name="polling_unit_id"', false);
         $response->assertSee('name="consent_to_data"', false);
     }
+
+    public function test_landing_page_exposes_the_theme_toggle_and_register_link(): void
+    {
+        State::factory()->create();
+
+        $this->get('/')
+            ->assertOk()
+            ->assertSee('data-theme-toggle', false)
+            ->assertSee(route('register'), false);
+    }
 }

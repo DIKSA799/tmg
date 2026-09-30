@@ -8,6 +8,9 @@ class DatabaseSeeder extends Seeder
 {
     public function run(): void
     {
-        $this->call(PollingUnitSeeder::class);
+        $this->call([
+            TmgUserSeeder::class,
+            PollingUnitSeeder::class,
+        ]);
     }
 }
