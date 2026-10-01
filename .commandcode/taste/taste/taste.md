@@ -16,3 +16,5 @@
 - Insists side effects like sending email/notifications be fully asynchronous and fail-safe: they must never block, slow, or fail the primary operation (registration) — on failure, log it and leave it for later retry rather than surfacing an error to the user. Confidence: 0.75
 - Expects transactional emails to look genuinely polished and on-brand (matching the site's visual identity), not plain/default templates. Confidence: 0.5
 - Designs for real production scale/throughput (explicitly asked the system to handle ~1000 concurrent registrations without strain). Confidence: 0.4
+- Deploys/hosts on aaPanel (the hosting control panel) and runs Laravel queue workers via its Supervisor plugin, expecting the panel-based setup (installing plugins, adding daemons/cron tasks) rather than raw server config. Confidence: 0.6
+- Wants operational/infra setup instructions that are "easy" — step-by-step through the panel's GUI, with concrete values and gotchas spelled out, not abstract server administration. Confidence: 0.4

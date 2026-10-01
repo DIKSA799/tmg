@@ -126,6 +126,7 @@
                         <th scope="col">Volunteer category</th>
                         <th scope="col">Occupation</th>
                         <th scope="col">Disability</th>
+                        <th scope="col">Pledge</th>
                         <th scope="col">Consent</th>
                         <th scope="col">Captured</th>
                     </tr>
@@ -150,13 +151,16 @@
                             <td>{{ \App\Enums\Occupation::tryFrom($record->occupation)?->label() ?? '—' }}</td>
                             <td>{{ is_null($record->has_disability) ? '—' : ($record->has_disability ? 'Yes' : 'No') }}</td>
                             <td>
+                                <span class="admin-pill">{{ $record->pledge_accepted ? 'Accepted' : 'Missing' }}</span>
+                            </td>
+                            <td>
                                 <span class="admin-pill">{{ $record->consent_to_contact ? 'Contact' : 'No contact' }}</span>
                             </td>
                             <td class="num">{{ $record->captured_at?->format('d M Y H:i') }}</td>
                         </tr>
                     @empty
                         <tr>
-                            <td colspan="18" class="py-10 text-center text-[color:var(--ink-mute)]">No records match these filters.</td>
+                            <td colspan="19" class="py-10 text-center text-[color:var(--ink-mute)]">No records match these filters.</td>
                         </tr>
                     @endforelse
                 </tbody>

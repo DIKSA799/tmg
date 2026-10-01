@@ -62,6 +62,7 @@ class VoterRecordFactory extends Factory
             'preferred_channel_other' => null,
             'consent_to_contact' => true,
             'consent_to_data' => true,
+            'pledge_accepted' => true,
             'captured_at' => now(),
         ];
     }

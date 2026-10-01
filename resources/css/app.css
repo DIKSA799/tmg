@@ -357,6 +357,15 @@
         color: var(--flag-red);
     }
 
+    .checkbox {
+        width: 1.15rem;
+        height: 1.15rem;
+        flex: none;
+        margin-top: 0.15rem;
+        accent-color: var(--accent);
+        cursor: pointer;
+    }
+
     .input {
         width: 100%;
         border-radius: 15px;

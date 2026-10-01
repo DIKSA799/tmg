@@ -241,6 +241,17 @@
 
             <div class="grid gap-5">
                 <div class="min-w-0">
+                    <label class="flex cursor-pointer items-start gap-3 rounded-2xl border border-[color:var(--line)] bg-[color:var(--paper)] p-4 transition hover:border-[color:var(--accent)]">
+                        <input type="checkbox" name="pledge_accepted" value="1" class="checkbox" required>
+                        <span class="min-w-0 text-sm leading-relaxed text-[color:var(--ink-soft)]">
+                            <span class="block font-semibold text-[color:var(--ink)]">I accept the Ambassador pledge <span class="req">*</span></span>
+                            I voluntarily join TMG and undertake to promote its objectives peacefully and lawfully; mobilise and recruit supporters; encourage eligible citizens to participate in elections; respect the freedom of every voter; refrain from violence, intimidation, misinformation, hate speech, bribery or unlawful electoral conduct; protect confidential information entrusted to me; and report suspected electoral irregularities only through lawful channels.
+                        </span>
+                    </label>
+                    <p class="field-error" data-error-for="pledge_accepted" hidden></p>
+                </div>
+
+                <div class="min-w-0">
                     <span class="field-label">Agree to receive relevant communications through the selected channel? <span class="req">*</span></span>
                     <div class="segments max-w-sm">
                         <label class="segment"><input type="radio" name="consent_to_contact" value="1" checked><span>Yes</span></label>

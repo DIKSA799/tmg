@@ -319,6 +319,7 @@ export function initCaptureForm() {
             preferred_channel_other: text('preferred_channel_other'),
             consent_to_contact: data.get('consent_to_contact') === '1',
             consent_to_data: data.get('consent_to_data') === '1',
+            pledge_accepted: data.get('pledge_accepted') === '1',
             latitude: latitudeInput.value ? Number(latitudeInput.value) : null,
             longitude: longitudeInput.value ? Number(longitudeInput.value) : null,
             captured_at: new Date().toISOString(),
@@ -381,6 +382,9 @@ export function initCaptureForm() {
         });
         form.querySelectorAll('input[type="radio"][name="has_disability"]').forEach((radio) => {
             radio.checked = radio.value === '0';
+        });
+        form.querySelectorAll('input[type="checkbox"][name="pledge_accepted"]').forEach((checkbox) => {
+            checkbox.checked = false;
         });
         form.querySelectorAll('[data-other-field]').forEach((field) => {
             field.classList.add('hidden');

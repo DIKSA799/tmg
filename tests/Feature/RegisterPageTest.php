@@ -36,6 +36,8 @@ class RegisterPageTest extends TestCase
         $response->assertSee('name="occupation"', false);
         $response->assertSee('name="has_disability"', false);
         $response->assertSee('Do you have a disability?', false);
+        $response->assertSee('I voluntarily join TMG and undertake to promote its objectives', false);
+        $response->assertSee('name="pledge_accepted"', false);
         $response->assertSee('Grassroots Mobilisation', false);
         $response->assertSee('name="polling_unit_id"', false);
         $response->assertSee('data-theme-toggle', false);

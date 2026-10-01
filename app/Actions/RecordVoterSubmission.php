@@ -57,6 +57,7 @@ class RecordVoterSubmission
             'preferred_channel_other' => $data['preferred_channel_other'] ?? null,
             'consent_to_contact' => $data['consent_to_contact'],
             'consent_to_data' => $data['consent_to_data'],
+            'pledge_accepted' => $data['pledge_accepted'],
             'agent_id' => $data['agent_id'] ?? null,
             'ip_address' => $ipAddress,
             'latitude' => $data['latitude'] ?? null,

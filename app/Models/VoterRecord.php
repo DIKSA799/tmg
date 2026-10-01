@@ -38,6 +38,7 @@ class VoterRecord extends Model
         'preferred_channel_other',
         'consent_to_contact',
         'consent_to_data',
+        'pledge_accepted',
         'agent_id',
         'ip_address',
         'latitude',
@@ -52,6 +53,7 @@ class VoterRecord extends Model
         return [
             'consent_to_contact' => 'boolean',
             'consent_to_data' => 'boolean',
+            'pledge_accepted' => 'boolean',
             'has_disability' => 'boolean',
             'device' => 'array',
             'latitude' => 'decimal:7',

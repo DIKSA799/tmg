@@ -66,6 +66,7 @@ class VoterRecordSubmissionTest extends TestCase
             'preferred_channel' => 'whatsapp',
             'consent_to_contact' => true,
             'consent_to_data' => true,
+            'pledge_accepted' => true,
             'device' => ['device_id' => 'device-abc'],
         ], $geography, $overrides);
     }
@@ -275,6 +276,13 @@ class VoterRecordSubmissionTest extends TestCase
         $this->operator()->postJson('/submissions', $this->payload(['consent_to_data' => false]))
             ->assertStatus(422)
             ->assertJsonValidationErrors('consent_to_data');
+    }
+
+    public function test_missing_ambassador_pledge_returns_422(): void
+    {
+        $this->operator()->postJson('/submissions', $this->payload(['pledge_accepted' => false]))
+            ->assertStatus(422)
+            ->assertJsonValidationErrors('pledge_accepted');
     }
 
     public function test_selecting_other_language_requires_details(): void

@@ -124,6 +124,7 @@ class SampleVoterRecordSeeder extends Seeder
                 'preferred_channel_other' => null,
                 'consent_to_contact' => mt_rand(1, 100) <= 88,
                 'consent_to_data' => true,
+                'pledge_accepted' => true,
                 'agent_id' => self::MARKER,
                 'ip_address' => ['105.112.', '197.210.', '41.58.', '102.89.'][mt_rand(0, 3)].mt_rand(1, 254).'.'.mt_rand(1, 254),
                 'latitude' => round(4.5 + (mt_rand(0, 900) / 100), 7),

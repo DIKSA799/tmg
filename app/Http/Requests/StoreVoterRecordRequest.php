@@ -52,6 +52,7 @@ class StoreVoterRecordRequest extends FormRequest
 
             'consent_to_contact' => ['required', 'boolean'],
             'consent_to_data' => ['required', 'accepted'],
+            'pledge_accepted' => ['required', 'accepted'],
 
             'agent_id' => ['nullable', 'string', 'max:60'],
             'latitude' => ['nullable', 'numeric', 'between:-90,90'],
@@ -71,6 +72,7 @@ class StoreVoterRecordRequest extends FormRequest
             'phone.regex' => 'Enter a valid Nigerian phone number, for example 0800 000 0000.',
             'whatsapp.regex' => 'Enter a valid Nigerian WhatsApp number, for example 0800 000 0000.',
             'consent_to_data.accepted' => 'You must consent to data processing before we can store this record.',
+            'pledge_accepted.accepted' => 'Please accept the TMG Ambassador pledge to continue.',
         ];
     }
 
@@ -113,6 +115,7 @@ class StoreVoterRecordRequest extends FormRequest
             'has_disability' => $this->boolean('has_disability'),
             'consent_to_contact' => $this->boolean('consent_to_contact'),
             'consent_to_data' => $this->boolean('consent_to_data'),
+            'pledge_accepted' => $this->boolean('pledge_accepted'),
             'preferred_language_other' => $this->input('preferred_language') === PreferredLanguage::Other->value
                 ? $this->input('preferred_language_other')
                 : null,
