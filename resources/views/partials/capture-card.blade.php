@@ -136,7 +136,7 @@
         <fieldset class="space-y-6" data-section="volunteer">
             <legend class="flex items-center gap-3">
                 <span class="flex h-8 w-8 items-center justify-center rounded-full bg-[color:var(--accent-soft)] font-display text-sm font-bold text-[color:var(--accent-ink)]">3</span>
-                <span class="font-display text-lg font-bold">Volunteer profile</span>
+                <span class="font-display text-lg font-bold">Ambassador profile</span>
             </legend>
 
             <div class="grid gap-5 sm:grid-cols-2">

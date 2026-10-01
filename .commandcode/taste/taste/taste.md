@@ -20,3 +20,5 @@
 - Wants operational/infra setup instructions that are "easy" — step-by-step through the panel's GUI, with concrete values and gotchas spelled out, not abstract server administration. Confidence: 0.4
 - Prefers adaptive forms: when an earlier answer makes a later field irrelevant, hide that field rather than leaving it visible-and-required, and store a sensible default value for it so validation never blocks the submission. Confidence: 0.5
 - Works directly in the codebase in their IDE alongside the agent, hand-editing files while the agent is working — so the agent should re-read files before editing to avoid clobbering their manual changes. Confidence: 0.45
+- Runs the site behind Cloudflare for CDN and security, and expects hardening delivered as a concrete list of Cloudflare dashboard settings/features to enable (SSL/TLS, WAF, cache rules, rate limiting, etc.) rather than host-level config. Confidence: 0.5
+- Prioritizes page load performance — especially first/initial paint — but will not trade image quality for size; wants images optimized/resized while still looking good. Confidence: 0.5
