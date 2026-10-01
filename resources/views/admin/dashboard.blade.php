@@ -6,8 +6,6 @@
         ['key' => 'in_range', 'label' => 'This period', 'note' => $analytics['range'].'-day window', 'value' => $kpis['in_range']],
         ['key' => 'today', 'label' => 'Captured today', 'note' => now()->format('d M Y'), 'value' => $kpis['today']],
         ['key' => 'last_7_days', 'label' => 'Last 7 days', 'note' => 'Rolling week', 'value' => $kpis['last_7_days']],
-        ['key' => 'consent_contact_rate', 'label' => 'Contact consent', 'note' => 'Agreed to be contacted', 'value' => $kpis['consent_contact_rate'], 'suffix' => '%'],
-        ['key' => 'consent_data_rate', 'label' => 'Data consent', 'note' => 'Agreed to processing', 'value' => $kpis['consent_data_rate'], 'suffix' => '%'],
         ['key' => 'pvc_rate', 'label' => 'PVC collected', 'note' => 'Of this period', 'value' => $kpis['pvc_rate'], 'suffix' => '%'],
         ['key' => 'registered_rate', 'label' => 'Registered voters', 'note' => 'Of this period', 'value' => $kpis['registered_rate'], 'suffix' => '%'],
     ];
