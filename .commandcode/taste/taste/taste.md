@@ -26,3 +26,6 @@
 - Delegates implementation decisions to the agent: when shown candidate options, expects it to pick the best one and carry on rather than stopping to ask for a choice. Confidence: 0.7
 - Cares about not leaking one person's data to others — treats returning an existing record's details (reference, etc.) to a duplicate submission as a privacy leak and wants duplicates acknowledged without exposing the original record. Confidence: 0.55
 - Wants phone numbers accepted however they're typed (spaces, `+234`, `234`, `0`-trunk, bare national, brackets/dashes) and normalised server-side, rather than forcing one exact input format. Confidence: 0.5
+- Wants geographic data presented visually as an interactive map of Nigeria (states and LGAs), not just tables: a choropleth heat map where denser/darker areas mean more records, with hover tooltips showing the total for that area. Confidence: 0.5
+- Wants admin data tables to be exportable (CSV download honouring the current filters). Confidence: 0.4
+- Expects UI actions to live on the page that owns the data they act on — corrected an export placed on an aggregate/summary page ("no the export should be on records page") — i.e. don't scatter an action onto a related-but-different screen. Confidence: 0.45

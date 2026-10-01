@@ -1,4 +1,5 @@
 import Chart from 'chart.js/auto';
+import { initGeoMap } from './geo-map';
 
 const COLORS = {
     accent: '#ff3b41',
@@ -366,3 +367,4 @@ function boot() {
 }
 
 boot();
+initGeoMap();

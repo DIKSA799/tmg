@@ -110,6 +110,50 @@ class ConsolePagesTest extends TestCase
             ->assertSee('Local government areas', false);
     }
 
+    public function test_the_geography_page_renders_the_registration_heat_map(): void
+    {
+        State::factory()->create();
+
+        $this->actingAs(Admin::factory()->create(), 'admin')
+            ->get(route('admin.geography'))
+            ->assertOk()
+            ->assertSee('data-geo-map', false)
+            ->assertSee('geo/nigeria-states.geojson', false)
+            ->assertSee('window.__GEO_MAP', false);
+    }
+
+    public function test_the_records_table_can_be_exported_as_csv(): void
+    {
+        VoterRecord::factory()->create([
+            'full_name' => 'Amina Musa',
+            'reference' => 'TMG-DEL-NDW-UTO-033-K7Q2M9',
+        ]);
+
+        $response = $this->actingAs(Admin::factory()->create(), 'admin')
+            ->get(route('admin.records.export'));
+
+        $response->assertOk()->assertHeader('content-type', 'text/csv');
+
+        $csv = $response->streamedContent();
+
+        $this->assertStringContainsString('Reference,Name,Phone', $csv);
+        $this->assertStringContainsString('TMG-DEL-NDW-UTO-033-K7Q2M9', $csv);
+        $this->assertStringContainsString('Amina Musa', $csv);
+    }
+
+    public function test_the_records_export_respects_the_active_filters(): void
+    {
+        VoterRecord::factory()->create(['full_name' => 'Amina Musa', 'gender' => Gender::Female->value]);
+        VoterRecord::factory()->create(['full_name' => 'Bello Adamu', 'gender' => Gender::Male->value]);
+
+        $csv = $this->actingAs(Admin::factory()->create(), 'admin')
+            ->get(route('admin.records.export', ['gender' => Gender::Female->value]))
+            ->streamedContent();
+
+        $this->assertStringContainsString('Amina Musa', $csv);
+        $this->assertStringNotContainsString('Bello Adamu', $csv);
+    }
+
     public function test_an_invalid_record_filter_is_rejected(): void
     {
         $this->actingAs(Admin::factory()->create(), 'admin')

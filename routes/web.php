@@ -84,6 +84,7 @@ Route::prefix(config('admin.path'))
             Route::get('/', DashboardController::class)->name('dashboard');
             Route::get('data', [DashboardController::class, 'data'])->name('data');
             Route::get('records', [AdminRecordController::class, 'index'])->name('records');
+            Route::get('records/export', [AdminRecordController::class, 'export'])->name('records.export');
             Route::get('geography', [AdminGeographyController::class, 'index'])->name('geography');
             Route::post('logout', [AdminLoginController::class, 'destroy'])->name('logout');
         });

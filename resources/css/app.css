@@ -1038,6 +1038,108 @@
         text-decoration: none;
     }
 
+    /* ---- Geography heat map ---- */
+    .geo-map {
+        position: relative;
+    }
+
+    .geo-map-canvas {
+        width: 100%;
+        max-width: 54rem;
+        margin-inline: auto;
+    }
+
+    .geo-map-canvas svg {
+        display: block;
+        width: 100%;
+        height: auto;
+    }
+
+    .geo-map-canvas path {
+        stroke: color-mix(in oklab, var(--paper) 72%, transparent);
+        stroke-width: 0.7;
+        cursor: pointer;
+        transition: stroke 0.2s ease, stroke-width 0.2s ease;
+    }
+
+    .geo-map-canvas path:hover {
+        stroke: var(--accent);
+        stroke-width: 1.6;
+    }
+
+    .geo-map-legend {
+        display: flex;
+        flex-wrap: wrap;
+        align-items: center;
+        gap: 0.6rem;
+        margin-top: 1rem;
+        font-size: 0.72rem;
+        color: var(--ink-mute);
+    }
+
+    .geo-map-scale {
+        display: inline-flex;
+        height: 0.6rem;
+        border-radius: 999px;
+        overflow: hidden;
+    }
+
+    .geo-map-scale span {
+        display: block;
+        width: 2.4rem;
+        height: 100%;
+    }
+
+    .geo-map-legend-empty {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.35rem;
+    }
+
+    .geo-map-legend-empty i {
+        display: inline-block;
+        width: 0.9rem;
+        height: 0.6rem;
+        border-radius: 3px;
+    }
+
+    .geo-tip {
+        position: absolute;
+        z-index: 30;
+        display: flex;
+        flex-direction: column;
+        gap: 0.15rem;
+        min-width: 9.5rem;
+        padding: 0.6rem 0.75rem;
+        border: 1px solid var(--glass-border);
+        border-radius: 12px;
+        background: var(--glass-strong);
+        -webkit-backdrop-filter: blur(14px);
+        backdrop-filter: blur(14px);
+        box-shadow: var(--shadow-neo-sm);
+        font-size: 0.75rem;
+        color: var(--ink);
+        pointer-events: none;
+    }
+
+    .geo-tip[hidden] {
+        display: none;
+    }
+
+    .geo-tip strong {
+        font-size: 0.82rem;
+    }
+
+    .geo-tip-value {
+        font-weight: 700;
+    }
+
+    .geo-tip-state,
+    .geo-tip-share {
+        font-size: 0.68rem;
+        color: var(--ink-mute);
+    }
+
     /* ---- Ambassador duties carousel ---- */
     .duties-track {
         scrollbar-width: none;

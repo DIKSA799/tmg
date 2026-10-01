@@ -12,6 +12,7 @@ use Illuminate\Contracts\View\View;
 use Illuminate\Http\Request;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Str;
 
 class GeographyController extends Controller
 {
@@ -42,7 +43,43 @@ class GeographyController extends Controller
                 ->paginate(30)
                 ->withQueryString(),
             'lgaRecords' => VoterRecord::query()->selectRaw('lga_id, count(*) as total')->groupBy('lga_id')->pluck('total', 'lga_id'),
+            'stateHeat' => $this->recordsPerState(),
+            'lgaHeat' => $this->recordsPerLga(),
         ]);
+    }
+
+    /**
+     * Records per state keyed by a slug of the state name, so the boundary file
+     * can be matched without relying on database ids.
+     *
+     * @return Collection<string, int>
+     */
+    private function recordsPerState(): Collection
+    {
+        return DB::table('voter_records')
+            ->join('states', 'states.id', '=', 'voter_records.state_id')
+            ->selectRaw('states.name as name, count(*) as total')
+            ->groupBy('states.name')
+            ->get()
+            ->mapWithKeys(fn (object $row): array => [Str::slug((string) $row->name) => (int) $row->total]);
+    }
+
+    /**
+     * Records per LGA keyed by "state-slug|lga-slug".
+     *
+     * @return Collection<string, int>
+     */
+    private function recordsPerLga(): Collection
+    {
+        return DB::table('voter_records')
+            ->join('lgas', 'lgas.id', '=', 'voter_records.lga_id')
+            ->join('states', 'states.id', '=', 'lgas.state_id')
+            ->selectRaw('states.name as state, lgas.name as lga, count(*) as total')
+            ->groupBy('states.name', 'lgas.name')
+            ->get()
+            ->mapWithKeys(fn (object $row): array => [
+                Str::slug((string) $row->state).'|'.Str::slug((string) $row->lga) => (int) $row->total,
+            ]);
     }
 
     /**

@@ -7,6 +7,41 @@
     </x-slot:actions>
 
     <section class="admin-card">
+        <div class="flex flex-wrap items-start justify-between gap-3">
+            <div>
+                <h2 class="admin-card-title">Registration heat map</h2>
+                <p class="admin-card-sub">Darker areas hold more registrations — hover any area for its total</p>
+            </div>
+
+            <div class="admin-range" role="group" aria-label="Map level">
+                <button type="button" data-map-level="states" class="is-active">States</button>
+                <button type="button" data-map-level="lgas">LGAs</button>
+            </div>
+        </div>
+
+        <div
+            class="geo-map"
+            data-geo-map
+            data-states="{{ asset('geo/nigeria-states.geojson') }}"
+            data-lgas="{{ asset('geo/nigeria-lgas.geojson') }}"
+        >
+            <div class="geo-map-canvas" data-geo-canvas></div>
+            <div class="geo-map-legend" data-geo-legend></div>
+        </div>
+
+        <p class="mt-3 text-[0.72rem] text-[color:var(--ink-mute)]" data-geo-status role="status" aria-live="polite">
+            Loading boundaries…
+        </p>
+    </section>
+
+    <script>
+        window.__GEO_MAP = {
+            states: @json($stateHeat),
+            lgas: @json($lgaHeat),
+        };
+    </script>
+
+    <section class="admin-card">
         <h2 class="admin-card-title">States</h2>
         <p class="admin-card-sub">Register size and records captured per state</p>
 

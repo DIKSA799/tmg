@@ -2,6 +2,7 @@
     <x-slot:actions>
         <span class="admin-pill">{{ number_format($records->total()) }} matching</span>
         <span class="admin-pill">Page {{ $records->currentPage() }} of {{ max(1, $records->lastPage()) }}</span>
+        <a href="{{ route('admin.records.export', array_filter($filters)) }}" class="btn btn-ghost !px-4 !py-2.5 text-xs">Export CSV</a>
     </x-slot:actions>
 
     <form class="admin-card admin-grid" method="GET" action="{{ route('admin.records') }}" style="grid-template-columns: repeat(auto-fit, minmax(10.5rem, 1fr));">
