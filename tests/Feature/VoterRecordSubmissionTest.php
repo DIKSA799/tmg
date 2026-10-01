@@ -318,7 +318,7 @@ class VoterRecordSubmissionTest extends TestCase
     {
         $this->operator()->postJson('/submissions', $this->payload([
             'registered_voter_status' => 'no',
-            'pvc_status' => 'not_sure',
+            'pvc_status' => 'collected',
         ]))->assertCreated();
 
         $this->assertDatabaseHas('voter_records', ['pvc_status' => 'not_collected']);

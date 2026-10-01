@@ -1,6 +1,6 @@
 const VIEW_HEIGHT = 900;
 const PADDING = 6;
-const NO_DATA_FILL = 'rgba(255, 255, 255, 0.055)';
+const NO_DATA_FILL = 'rgba(255, 255, 255, 0.09)';
 const LOW_RGB = [74, 17, 22];
 const HIGH_RGB = [255, 59, 65];
 
@@ -88,10 +88,12 @@ function fillFor(value, max) {
 }
 
 function countFor(feature, level, heat) {
+    // heat is the whole __GEO_MAP payload: { states: {...}, lgas: {...} }.
+    const index = (level === 'lgas' ? heat.lgas : heat.states) ?? {};
     const names = feature.properties.db ?? [];
     const scope = level === 'lgas' ? `${slug(feature.properties.state ?? '')}|` : '';
 
-    return names.reduce((total, name) => total + Number(heat[scope + slug(name)] ?? 0), 0);
+    return names.reduce((total, name) => total + Number(index[scope + slug(name)] ?? 0), 0);
 }
 
 function buildSvg(features, level, heat, total) {

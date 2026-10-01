@@ -96,7 +96,6 @@ class SampleVoterRecordSeeder extends Seeder
                 'registered_voter_status' => $this->pick([
                     RegisteredVoterStatus::Yes->value, RegisteredVoterStatus::Yes->value,
                     RegisteredVoterStatus::Yes->value, RegisteredVoterStatus::Yes->value,
-                    RegisteredVoterStatus::NotSure->value,
                     RegisteredVoterStatus::No->value,
                 ]),
                 'pvc_status' => $this->pick([
@@ -104,7 +103,6 @@ class SampleVoterRecordSeeder extends Seeder
                     PvcStatus::AwaitingCollection->value, PvcStatus::AwaitingCollection->value,
                     PvcStatus::NotCollected->value,
                     PvcStatus::LostOrDamaged->value,
-                    PvcStatus::NotSure->value,
                 ]),
                 'preferred_language' => $this->pick([
                     PreferredLanguage::Hausa->value, PreferredLanguage::Hausa->value,
