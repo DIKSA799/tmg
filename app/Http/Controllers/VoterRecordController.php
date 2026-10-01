@@ -19,7 +19,7 @@ class VoterRecordController extends Controller
         return response()->json([
             'ok' => true,
             'duplicate' => ! $result['created'],
-            'reference' => $result['record']->public_id,
+            'reference' => $result['record']->reference,
             'captured_at' => $result['record']->captured_at?->toIso8601String(),
             'message' => $result['created']
                 ? 'Record captured successfully.'

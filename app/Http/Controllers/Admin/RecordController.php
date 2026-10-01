@@ -37,7 +37,12 @@ class RecordController extends Controller
         $records = VoterRecord::query()
             ->with(['state:id,name', 'lga:id,name', 'ward:id,name', 'pollingUnit:id,name'])
             ->when($filters['search'] ?? null, fn ($query, string $search) => $query->where(
-                fn ($inner) => $inner->where('full_name', 'like', '%'.$search.'%')->orWhere('phone', 'like', '%'.$search.'%')
+                fn ($inner) => $inner
+                    ->where('full_name', 'like', '%'.$search.'%')
+                    ->orWhere('phone', 'like', '%'.$search.'%')
+                    ->orWhere('whatsapp', 'like', '%'.$search.'%')
+                    ->orWhere('email', 'like', '%'.$search.'%')
+                    ->orWhere('reference', 'like', '%'.$search.'%')
             ))
             ->when($filters['state_id'] ?? null, fn ($query, int|string $state) => $query->where('state_id', $state))
             ->when($filters['lga_id'] ?? null, fn ($query, int|string $lga) => $query->where('lga_id', $lga))

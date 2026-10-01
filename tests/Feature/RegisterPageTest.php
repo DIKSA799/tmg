@@ -11,9 +11,11 @@ class RegisterPageTest extends TestCase
 {
     use LazilyRefreshDatabase;
 
-    public function test_guests_are_redirected_from_the_register_page_to_login(): void
+    public function test_guests_can_open_the_register_page(): void
     {
-        $this->get('/register')->assertRedirect(route('login'));
+        $this->get('/register')
+            ->assertOk()
+            ->assertSee('Be part of #TMG', false);
     }
 
     public function test_authenticated_users_can_open_the_register_page(): void

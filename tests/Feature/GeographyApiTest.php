@@ -19,11 +19,13 @@ class GeographyApiTest extends TestCase
         return $this->actingAs(User::factory()->create());
     }
 
-    public function test_geography_endpoints_require_an_operator(): void
+    public function test_geography_endpoints_are_open_to_guests(): void
     {
-        State::factory()->create();
+        State::factory()->create(['name' => 'Abia', 'slug' => 'abia', 'code' => '01']);
 
-        $this->getJson('/geography/states')->assertUnauthorized();
+        $this->getJson('/geography/states')
+            ->assertOk()
+            ->assertJsonCount(1, 'data');
     }
 
     public function test_states_endpoint_returns_states_ordered_by_name(): void

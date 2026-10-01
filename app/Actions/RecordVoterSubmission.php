@@ -2,11 +2,16 @@
 
 namespace App\Actions;
 
+use App\Jobs\SendAmbassadorWelcomeEmail;
 use App\Models\VoterRecord;
 use Illuminate\Database\UniqueConstraintViolationException;
+use Illuminate\Support\Facades\Log;
+use Throwable;
 
 class RecordVoterSubmission
 {
+    public function __construct(private readonly GenerateVoterReference $references) {}
+
     /**
      * Persist a voter record idempotently.
      *
@@ -24,6 +29,12 @@ class RecordVoterSubmission
         }
 
         $attributes = [
+            'reference' => $this->references->handle(
+                $data['state_id'],
+                $data['lga_id'],
+                $data['ward_id'],
+                $data['polling_unit_id'],
+            ),
             'idempotency_key' => $data['idempotency_key'],
             'full_name' => $data['full_name'],
             'gender' => $data['gender'],
@@ -55,12 +66,37 @@ class RecordVoterSubmission
         ];
 
         try {
-            return ['record' => VoterRecord::create($attributes), 'created' => true];
+            $record = VoterRecord::create($attributes);
         } catch (UniqueConstraintViolationException) {
             return [
                 'record' => VoterRecord::query()->where('idempotency_key', $data['idempotency_key'])->firstOrFail(),
                 'created' => false,
             ];
+        }
+
+        $this->queueWelcomeEmail($record);
+
+        return ['record' => $record, 'created' => true];
+    }
+
+    /**
+     * Queue the welcome email. A mail or queue problem is logged, never thrown,
+     * so a registration can never fail because of it.
+     */
+    private function queueWelcomeEmail(VoterRecord $record): void
+    {
+        if ($record->email === null || $record->email === '') {
+            return;
+        }
+
+        try {
+            SendAmbassadorWelcomeEmail::dispatch($record->id);
+        } catch (Throwable $exception) {
+            Log::error('Unable to queue the ambassador welcome email.', [
+                'voter_record_id' => $record->id,
+                'reference' => $record->reference,
+                'exception' => $exception->getMessage(),
+            ]);
         }
     }
 }

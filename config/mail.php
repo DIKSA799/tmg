@@ -65,6 +65,19 @@ return [
             'transport' => 'resend',
         ],
 
+        // Resend over SMTP. Set MAIL_MAILER=resend-smtp and RESEND_KEY=re_...
+        // (Use port 465 with scheme "smtps" for implicit TLS instead.)
+        'resend-smtp' => [
+            'transport' => 'smtp',
+            'scheme' => env('MAIL_SCHEME', 'smtp'),
+            'host' => env('MAIL_HOST', 'smtp.resend.com'),
+            'port' => env('MAIL_PORT', 587),
+            'username' => env('MAIL_USERNAME', 'resend'),
+            'password' => env('RESEND_KEY'),
+            'timeout' => 15,
+            'local_domain' => env('MAIL_EHLO_DOMAIN', parse_url((string) env('APP_URL', 'http://localhost'), PHP_URL_HOST)),
+        ],
+
         'sendmail' => [
             'transport' => 'sendmail',
             'path' => env('MAIL_SENDMAIL_PATH', '/usr/sbin/sendmail -bs -i'),

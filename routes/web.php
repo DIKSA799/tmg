@@ -18,7 +18,7 @@ use Illuminate\Support\Facades\Route;
 |--------------------------------------------------------------------------
 |
 | The root serves the public TMG Ambassadors Space microsite. Registration
-| itself remains restricted to signed-in operators.
+| is currently open to the public as well.
 |
 */
 Route::get('/', LandingController::class)->name('home');
@@ -32,24 +32,32 @@ Route::post('logout', [LoginController::class, 'destroy'])
     ->middleware('auth')
     ->name('logout');
 
-Route::middleware('auth')->group(function () {
-    Route::get('register', RegisterController::class)->name('register');
+/*
+|--------------------------------------------------------------------------
+| Ambassador registration (open)
+|--------------------------------------------------------------------------
+|
+| The registration flow is open to the public for now. To require a signed-in
+| operator again, wrap `register`, the `geography` group and `submissions`
+| below in Route::middleware('auth')->group(fn () => ...).
+|
+*/
+Route::get('register', RegisterController::class)->name('register');
 
-    Route::prefix('geography')->name('geography.')->group(function () {
-        Route::get('states', [GeographyController::class, 'states'])->name('states');
-        Route::get('states/{state}/lgas', [GeographyController::class, 'lgas'])->name('lgas');
-        Route::get('lgas/{lga}/wards', [GeographyController::class, 'wards'])->name('wards');
-        Route::get('wards/{ward}/polling-units', [GeographyController::class, 'pollingUnits'])->name('polling-units');
+Route::prefix('geography')->name('geography.')->group(function () {
+    Route::get('states', [GeographyController::class, 'states'])->name('states');
+    Route::get('states/{state}/lgas', [GeographyController::class, 'lgas'])->name('lgas');
+    Route::get('lgas/{lga}/wards', [GeographyController::class, 'wards'])->name('wards');
+    Route::get('wards/{ward}/polling-units', [GeographyController::class, 'pollingUnits'])->name('polling-units');
 
-        Route::post('locate', [GeographyController::class, 'locate'])
-            ->middleware('throttle:30,1')
-            ->name('locate');
-    });
-
-    Route::post('submissions', [VoterRecordController::class, 'store'])
-        ->middleware('throttle:20,1')
-        ->name('submissions.store');
+    Route::post('locate', [GeographyController::class, 'locate'])
+        ->middleware('throttle:30,1')
+        ->name('locate');
 });
+
+Route::post('submissions', [VoterRecordController::class, 'store'])
+    ->middleware('throttle:20,1')
+    ->name('submissions.store');
 
 /*
 |--------------------------------------------------------------------------

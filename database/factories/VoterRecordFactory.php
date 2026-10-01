@@ -32,6 +32,14 @@ class VoterRecordFactory extends Factory
 
         return [
             'public_id' => (string) Str::uuid(),
+            'reference' => sprintf(
+                'TMG-%s-%s-%s-%03d-%s',
+                Str::upper(Str::random(3)),
+                Str::upper(Str::random(3)),
+                Str::upper(Str::random(3)),
+                fake()->numberBetween(1, 999),
+                Str::upper(Str::random(6)),
+            ),
             'idempotency_key' => (string) Str::uuid(),
             'full_name' => fake()->name(),
             'gender' => fake()->randomElement(Gender::cases())->value,

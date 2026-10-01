@@ -15,6 +15,7 @@ class VoterRecord extends Model
 
     protected $fillable = [
         'public_id',
+        'reference',
         'idempotency_key',
         'full_name',
         'gender',

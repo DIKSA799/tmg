@@ -7,7 +7,7 @@
     <form class="admin-card admin-grid" method="GET" action="{{ route('admin.records') }}" style="grid-template-columns: repeat(auto-fit, minmax(10.5rem, 1fr));">
         <div>
             <label class="field-label" for="f-search">Search</label>
-            <input id="f-search" class="admin-input" type="search" name="search" value="{{ $filters['search'] ?? '' }}" placeholder="Name or phone">
+            <input id="f-search" class="admin-input" type="search" name="search" value="{{ $filters['search'] ?? '' }}" placeholder="Name, phone or reference">
         </div>
 
         <div>
@@ -110,6 +110,7 @@
             <table class="admin-table">
                 <thead>
                     <tr>
+                        <th scope="col">Reference</th>
                         <th scope="col">Name</th>
                         <th scope="col">Phone</th>
                         <th scope="col">WhatsApp</th>
@@ -132,6 +133,7 @@
                 <tbody>
                     @forelse ($records as $record)
                         <tr>
+                            <td class="num">{{ $record->reference ?? '—' }}</td>
                             <td>{{ $record->full_name }}</td>
                             <td class="num">{{ $record->phone }}</td>
                             <td class="num">{{ $record->whatsapp ?? '—' }}</td>
@@ -154,7 +156,7 @@
                         </tr>
                     @empty
                         <tr>
-                            <td colspan="17" class="py-10 text-center text-[color:var(--ink-mute)]">No records match these filters.</td>
+                            <td colspan="18" class="py-10 text-center text-[color:var(--ink-mute)]">No records match these filters.</td>
                         </tr>
                     @endforelse
                 </tbody>

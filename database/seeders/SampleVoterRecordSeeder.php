@@ -2,12 +2,15 @@
 
 namespace Database\Seeders;
 
+use App\Actions\GenerateVoterReference;
 use App\Enums\AgeBand;
 use App\Enums\Gender;
+use App\Enums\Occupation;
 use App\Enums\PreferredChannel;
 use App\Enums\PreferredLanguage;
 use App\Enums\PvcStatus;
 use App\Enums\RegisteredVoterStatus;
+use App\Enums\VolunteerCategory;
 use App\Models\PollingUnit;
 use App\Models\VoterRecord;
 use Illuminate\Database\Seeder;
@@ -44,6 +47,7 @@ class SampleVoterRecordSeeder extends Seeder
 
         $now = Carbon::now();
         $rows = [];
+        $references = app(GenerateVoterReference::class);
 
         foreach ($units as $unit) {
             $ward = $unit->ward;
@@ -59,6 +63,7 @@ class SampleVoterRecordSeeder extends Seeder
 
             $rows[] = [
                 'public_id' => (string) Str::uuid(),
+                'reference' => $references->format($state, $lga, $ward, $unit),
                 'idempotency_key' => (string) Str::uuid(),
                 'full_name' => fake()->name(),
                 'gender' => $this->pick([
@@ -77,6 +82,11 @@ class SampleVoterRecordSeeder extends Seeder
                     AgeBand::SixtyFivePlus->value,
                 ]),
                 'phone' => '+234'.$prefix.fake()->numerify('#######'),
+                'whatsapp' => mt_rand(1, 100) <= 72 ? '+234'.$prefix.fake()->numerify('#######') : null,
+                'email' => mt_rand(1, 100) <= 55 ? fake()->safeEmail() : null,
+                'volunteer_category' => fake()->randomElement(VolunteerCategory::cases())->value,
+                'occupation' => fake()->randomElement(Occupation::cases())->value,
+                'has_disability' => mt_rand(1, 100) <= 8,
                 'state_id' => $state->id,
                 'lga_id' => $lga->id,
                 'ward_id' => $ward->id,

@@ -28,13 +28,13 @@ class LoginTest extends TestCase
         $this->assertAuthenticated();
     }
 
-    public function test_signing_in_returns_guests_to_the_page_they_requested(): void
+    public function test_signing_in_returns_guests_to_the_intended_page(): void
     {
         $this->seed(TmgUserSeeder::class);
 
-        $this->get('/register')->assertRedirect(route('login'));
-
-        $this->post('/login', ['username' => 'tmguser', 'password' => 'passwd20'])
+        // Registration is open for now, so the intended URL is seeded directly.
+        $this->withSession(['url' => ['intended' => route('register')]])
+            ->post('/login', ['username' => 'tmguser', 'password' => 'passwd20'])
             ->assertRedirect(route('register'));
 
         $this->assertAuthenticated();
