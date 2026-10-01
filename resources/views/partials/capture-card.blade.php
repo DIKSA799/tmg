@@ -13,7 +13,7 @@
     <div class="flex flex-col gap-6 border-b border-[color:var(--line)] p-7 sm:p-9 lg:flex-row lg:items-end lg:justify-between">
         <div class="max-w-xl">
             <span class="chip"><span class="chip-dot" aria-hidden="true"></span> Live capture</span>
-            <h2 class="mt-5 font-display text-3xl font-bold tracking-tight sm:text-4xl">{{ $cardHeading ?? 'Capture a voter' }}</h2>
+            <h2 class="mt-5 font-display text-3xl font-bold tracking-tight sm:text-4xl">{{ $cardHeading ?? 'Capture a volunteer' }}</h2>
             <p class="mt-3 text-sm leading-relaxed text-[color:var(--ink-soft)] sm:text-base">
                 {{ $cardBlurb ?? 'Fields marked' }} <span class="font-semibold text-[color:var(--flag-red)]">*</span>
                 {{ $cardBlurbSuffix ?? 'are required. Location is pre-filled to the first available option — use your device location to jump straight to your own ward.' }}
@@ -41,7 +41,7 @@
                 Reference <span data-success-reference class="font-semibold text-[color:var(--ink)]">—</span>
             </p>
             <div class="mt-7">
-                <button type="button" class="btn btn-primary" data-capture-again>Capture another voter</button>
+                <button type="button" class="btn btn-primary" data-capture-again>Capture another volunteer</button>
             </div>
         </div>
     </div>
@@ -136,7 +136,7 @@
         <fieldset class="space-y-6" data-section="volunteer">
             <legend class="flex items-center gap-3">
                 <span class="flex h-8 w-8 items-center justify-center rounded-full bg-[color:var(--accent-soft)] font-display text-sm font-bold text-[color:var(--accent-ink)]">3</span>
-                <span class="font-display text-lg font-bold">Volunteer details</span>
+                <span class="font-display text-lg font-bold">Volunteer profile</span>
             </legend>
 
             <div class="grid gap-5 sm:grid-cols-2">
@@ -170,12 +170,12 @@
         <fieldset class="space-y-6" data-section="status">
             <legend class="flex items-center gap-3">
                 <span class="flex h-8 w-8 items-center justify-center rounded-full bg-[color:var(--accent-soft)] font-display text-sm font-bold text-[color:var(--accent-ink)]">4</span>
-                <span class="font-display text-lg font-bold">Voter status &amp; preferences</span>
+                <span class="font-display text-lg font-bold">Volunteer Registration status &amp; preferences</span>
             </legend>
 
             <div class="grid gap-5 sm:grid-cols-2">
                 <div class="min-w-0">
-                    <label class="field-label" for="registered_voter_status">Registered voter? <span class="req">*</span></label>
+                    <label class="field-label" for="registered_voter_status">Registered volunteer? <span class="req">*</span></label>
                     <select id="registered_voter_status" name="registered_voter_status" class="input" required>
                         <option value="" disabled selected>Select…</option>
                         @foreach ($optionSets['registered_voter_status'] as $value => $label)
@@ -185,7 +185,7 @@
                     <p class="field-error" data-error-for="registered_voter_status" hidden></p>
                 </div>
 
-                <div class="min-w-0">
+                <div class="min-w-0" data-pvc-field>
                     <label class="field-label" for="pvc_status">PVC status <span class="req">*</span></label>
                     <select id="pvc_status" name="pvc_status" class="input" required>
                         <option value="" disabled selected>Select…</option>
@@ -251,23 +251,23 @@
                     <p class="field-error" data-error-for="pledge_accepted" hidden></p>
                 </div>
 
-                <div class="min-w-0">
+                <!-- <div class="min-w-0">
                     <span class="field-label">Agree to receive relevant communications through the selected channel? <span class="req">*</span></span>
                     <div class="segments max-w-sm">
                         <label class="segment"><input type="radio" name="consent_to_contact" value="1" checked><span>Yes</span></label>
                         <label class="segment"><input type="radio" name="consent_to_contact" value="0"><span>No</span></label>
                     </div>
                     <p class="field-error" data-error-for="consent_to_contact" hidden></p>
-                </div>
+                </div> -->
 
-                <div class="min-w-0">
+                <!-- <div class="min-w-0">
                     <span class="field-label">Informed of the purpose and consent to storage &amp; processing? <span class="req">*</span></span>
                     <div class="segments max-w-sm">
                         <label class="segment"><input type="radio" name="consent_to_data" value="1" checked><span>Yes</span></label>
                         <label class="segment"><input type="radio" name="consent_to_data" value="0"><span>No</span></label>
                     </div>
                     <p class="field-error" data-error-for="consent_to_data" hidden></p>
-                </div>
+                </div> -->
             </div>
         </fieldset>
 

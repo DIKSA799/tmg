@@ -18,3 +18,5 @@
 - Designs for real production scale/throughput (explicitly asked the system to handle ~1000 concurrent registrations without strain). Confidence: 0.4
 - Deploys/hosts on aaPanel (the hosting control panel) and runs Laravel queue workers via its Supervisor plugin, expecting the panel-based setup (installing plugins, adding daemons/cron tasks) rather than raw server config. Confidence: 0.6
 - Wants operational/infra setup instructions that are "easy" — step-by-step through the panel's GUI, with concrete values and gotchas spelled out, not abstract server administration. Confidence: 0.4
+- Prefers adaptive forms: when an earlier answer makes a later field irrelevant, hide that field rather than leaving it visible-and-required, and store a sensible default value for it so validation never blocks the submission. Confidence: 0.5
+- Works directly in the codebase in their IDE alongside the agent, hand-editing files while the agent is working — so the agent should re-read files before editing to avoid clobbering their manual changes. Confidence: 0.45

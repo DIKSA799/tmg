@@ -10,14 +10,14 @@ enum RegisteredVoterStatus: string
 
     case Yes = 'yes';
     case No = 'no';
-    case NotSure = 'not_sure';
+    // case NotSure = 'not_sure';
 
     public function label(): string
     {
         return match ($this) {
             self::Yes => 'Yes',
             self::No => 'No',
-            self::NotSure => 'Not sure',
+            // self::NotSure => 'Not sure',
         };
     }
 }

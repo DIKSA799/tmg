@@ -271,11 +271,27 @@ class VoterRecordSubmissionTest extends TestCase
             ->assertJsonValidationErrors('polling_unit_id');
     }
 
-    public function test_missing_data_processing_consent_returns_422(): void
+    public function test_consent_questions_are_optional(): void
     {
-        $this->operator()->postJson('/submissions', $this->payload(['consent_to_data' => false]))
-            ->assertStatus(422)
-            ->assertJsonValidationErrors('consent_to_data');
+        $payload = $this->payload();
+        unset($payload['consent_to_contact'], $payload['consent_to_data']);
+
+        $this->operator()->postJson('/submissions', $payload)->assertCreated();
+
+        $this->assertDatabaseHas('voter_records', [
+            'consent_to_contact' => false,
+            'consent_to_data' => false,
+        ]);
+    }
+
+    public function test_pvc_status_is_forced_when_the_volunteer_is_not_a_registered_voter(): void
+    {
+        $this->operator()->postJson('/submissions', $this->payload([
+            'registered_voter_status' => 'no',
+            'pvc_status' => 'not_sure',
+        ]))->assertCreated();
+
+        $this->assertDatabaseHas('voter_records', ['pvc_status' => 'not_collected']);
     }
 
     public function test_missing_ambassador_pledge_returns_422(): void

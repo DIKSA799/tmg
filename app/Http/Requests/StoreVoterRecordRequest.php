@@ -50,8 +50,10 @@ class StoreVoterRecordRequest extends FormRequest
             'preferred_channel' => ['required', Rule::enum(PreferredChannel::class)],
             'preferred_channel_other' => ['nullable', 'string', 'max:60', 'required_if:preferred_channel,other'],
 
-            'consent_to_contact' => ['required', 'boolean'],
-            'consent_to_data' => ['required', 'accepted'],
+            // The consent questions are optional: if the form omits them they are
+            // stored as false instead of blocking the registration.
+            'consent_to_contact' => ['boolean'],
+            'consent_to_data' => ['boolean'],
             'pledge_accepted' => ['required', 'accepted'],
 
             'agent_id' => ['nullable', 'string', 'max:60'],
@@ -71,7 +73,6 @@ class StoreVoterRecordRequest extends FormRequest
         return [
             'phone.regex' => 'Enter a valid Nigerian phone number, for example 0800 000 0000.',
             'whatsapp.regex' => 'Enter a valid Nigerian WhatsApp number, for example 0800 000 0000.',
-            'consent_to_data.accepted' => 'You must consent to data processing before we can store this record.',
             'pledge_accepted.accepted' => 'Please accept the TMG Ambassador pledge to continue.',
         ];
     }
@@ -113,6 +114,10 @@ class StoreVoterRecordRequest extends FormRequest
             'whatsapp' => PhoneNumber::normalize($this->input('whatsapp')),
             'email' => $this->filled('email') ? $this->input('email') : null,
             'has_disability' => $this->boolean('has_disability'),
+            // Someone who is not a registered voter has no PVC to collect.
+            'pvc_status' => $this->input('registered_voter_status') === RegisteredVoterStatus::No->value
+                ? PvcStatus::NotCollected->value
+                : $this->input('pvc_status'),
             'consent_to_contact' => $this->boolean('consent_to_contact'),
             'consent_to_data' => $this->boolean('consent_to_data'),
             'pledge_accepted' => $this->boolean('pledge_accepted'),

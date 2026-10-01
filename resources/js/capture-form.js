@@ -239,6 +239,28 @@ export function initCaptureForm() {
         }, { enableHighAccuracy: true, timeout: 10000, maximumAge: 300000 });
     });
 
+    const registeredVoterSelect = form.querySelector('[name="registered_voter_status"]');
+    const pvcField = form.querySelector('[data-pvc-field]');
+    const pvcSelect = form.querySelector('[name="pvc_status"]');
+
+    const syncPvcField = () => {
+        if (!registeredVoterSelect || !pvcField || !pvcSelect) {
+            return;
+        }
+
+        const notRegistered = registeredVoterSelect.value === 'no';
+        pvcField.classList.toggle('hidden', notRegistered);
+
+        if (notRegistered) {
+            pvcSelect.value = 'not_collected';
+        } else if (pvcSelect.value === 'not_collected') {
+            pvcSelect.value = '';
+        }
+    };
+
+    registeredVoterSelect?.addEventListener('change', syncPvcField);
+    syncPvcField();
+
     document.querySelectorAll('[data-other-trigger]').forEach((select) => {
         const field = form.querySelector(`[data-other-field="${select.name}"]`);
         const input = field?.querySelector('input');
@@ -373,6 +395,8 @@ export function initCaptureForm() {
                 select.value = '';
             }
         });
+
+        syncPvcField();
 
         form.querySelectorAll('input[type="radio"][name="gender"]').forEach((radio, index) => {
             radio.checked = index === 0;
