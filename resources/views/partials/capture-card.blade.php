@@ -13,7 +13,7 @@
     <div class="flex flex-col gap-6 border-b border-[color:var(--line)] p-7 sm:p-9 lg:flex-row lg:items-end lg:justify-between">
         <div class="max-w-xl">
             <span class="chip"><span class="chip-dot" aria-hidden="true"></span> Live capture</span>
-            <h2 class="mt-5 font-display text-3xl font-bold tracking-tight sm:text-4xl">{{ $cardHeading ?? 'Capture a volunteer' }}</h2>
+            <h2 class="mt-5 font-display text-3xl font-bold tracking-tight sm:text-4xl">{{ $cardHeading ?? 'Capture Ambassador' }}</h2>
             <p class="mt-3 text-sm leading-relaxed text-[color:var(--ink-soft)] sm:text-base">
                 {{ $cardBlurb ?? 'Fields marked' }} <span class="font-semibold text-[color:var(--flag-red)]">*</span>
                 {{ $cardBlurbSuffix ?? 'are required. Location is pre-filled to the first available option — use your device location to jump straight to your own ward.' }}
@@ -41,7 +41,7 @@
                 Reference <span data-success-reference class="font-semibold text-[color:var(--ink)]">—</span>
             </p>
             <div class="mt-7">
-                <button type="button" class="btn btn-primary" data-capture-again>Capture another volunteer</button>
+                <button type="button" class="btn btn-primary" data-capture-again>Capture another Ambassador</button>
             </div>
         </div>
     </div>
