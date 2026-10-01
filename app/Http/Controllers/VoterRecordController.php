@@ -16,14 +16,22 @@ class VoterRecordController extends Controller
             $request->userAgent(),
         );
 
+        if (! $result['created']) {
+            // Never echo the existing record back. A repeated phone number must
+            // not reveal the details or reference of whoever registered first.
+            return response()->json([
+                'ok' => true,
+                'duplicate' => true,
+                'message' => 'This phone number has already been registered.',
+            ]);
+        }
+
         return response()->json([
             'ok' => true,
-            'duplicate' => ! $result['created'],
+            'duplicate' => false,
             'reference' => $result['record']->reference,
             'captured_at' => $result['record']->captured_at?->toIso8601String(),
-            'message' => $result['created']
-                ? 'Record captured successfully.'
-                : 'This record has already been captured.',
-        ], $result['created'] ? 201 : 200);
+            'message' => 'Record captured successfully.',
+        ], 201);
     }
 }

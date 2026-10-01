@@ -71,8 +71,8 @@ class StoreVoterRecordRequest extends FormRequest
     public function messages(): array
     {
         return [
-            'phone.regex' => 'Enter a valid Nigerian phone number, for example 0800 000 0000.',
-            'whatsapp.regex' => 'Enter a valid Nigerian WhatsApp number, for example 0800 000 0000.',
+            'phone.regex' => 'Enter a valid Nigerian mobile number, for example 0803 123 4567 or +234 803 123 4567.',
+            'whatsapp.regex' => 'Enter a valid Nigerian WhatsApp number, for example 0803 123 4567 or +234 803 123 4567.',
             'pledge_accepted.accepted' => 'Please accept the TMG Ambassador pledge to continue.',
         ];
     }

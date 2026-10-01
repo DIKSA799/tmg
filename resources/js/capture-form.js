@@ -366,9 +366,20 @@ export function initCaptureForm() {
         form.classList.add('hidden');
         successPanel.hidden = false;
         successPanel.classList.remove('hidden');
-        successPanel.querySelector('[data-success-title]').textContent = payload.duplicate ? 'Already captured' : 'Record captured';
+        successPanel.querySelector('[data-success-title]').textContent = payload.duplicate ? 'Already registered' : 'Record captured';
         successPanel.querySelector('[data-success-message]').textContent = payload.message;
-        successPanel.querySelector('[data-success-reference]').textContent = payload.reference;
+
+        const reference = successPanel.querySelector('[data-success-reference]');
+        const referenceRow = successPanel.querySelector('[data-success-reference-row]');
+
+        if (payload.reference) {
+            reference.textContent = payload.reference;
+            referenceRow?.classList.remove('hidden');
+        } else {
+            reference.textContent = '—';
+            referenceRow?.classList.add('hidden');
+        }
+
         successPanel.scrollIntoView({ behavior: 'smooth', block: 'center' });
     }
 

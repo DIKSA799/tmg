@@ -22,3 +22,7 @@
 - Works directly in the codebase in their IDE alongside the agent, hand-editing files while the agent is working — so the agent should re-read files before editing to avoid clobbering their manual changes. Confidence: 0.45
 - Runs the site behind Cloudflare for CDN and security, and expects hardening delivered as a concrete list of Cloudflare dashboard settings/features to enable (SSL/TLS, WAF, cache rules, rate limiting, etc.) rather than host-level config. Confidence: 0.5
 - Prioritizes page load performance — especially first/initial paint — but will not trade image quality for size; wants images optimized/resized while still looking good. Confidence: 0.5
+- Prefers correctness/security rules enforced server-side as the source of truth rather than relying on client-side logic — explicitly asked for "server-side always" for "maximum usability and speed and accuracy and less error". Confidence: 0.75
+- Delegates implementation decisions to the agent: when shown candidate options, expects it to pick the best one and carry on rather than stopping to ask for a choice. Confidence: 0.7
+- Cares about not leaking one person's data to others — treats returning an existing record's details (reference, etc.) to a duplicate submission as a privacy leak and wants duplicates acknowledged without exposing the original record. Confidence: 0.55
+- Wants phone numbers accepted however they're typed (spaces, `+234`, `234`, `0`-trunk, bare national, brackets/dashes) and normalised server-side, rather than forcing one exact input format. Confidence: 0.5

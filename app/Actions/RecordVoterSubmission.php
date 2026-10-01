@@ -13,7 +13,11 @@ class RecordVoterSubmission
     public function __construct(private readonly GenerateVoterReference $references) {}
 
     /**
-     * Persist a voter record idempotently.
+     * Persist a volunteer record.
+     *
+     * The phone number is the identity: a phone already on file returns that
+     * record instead of creating a second one, while any new phone always
+     * creates a new record — no matter which operator or device submits it.
      *
      * @param  array<string, mixed>  $data
      * @return array{record: VoterRecord, created: bool}
@@ -21,7 +25,7 @@ class RecordVoterSubmission
     public function handle(array $data, ?string $ipAddress, ?string $userAgent): array
     {
         $existing = VoterRecord::query()
-            ->where('idempotency_key', $data['idempotency_key'])
+            ->where('phone', $data['phone'])
             ->first();
 
         if ($existing !== null) {
@@ -69,8 +73,10 @@ class RecordVoterSubmission
         try {
             $record = VoterRecord::create($attributes);
         } catch (UniqueConstraintViolationException) {
+            // A concurrent submission with the same phone reached the database
+            // first — return the record it created rather than a second copy.
             return [
-                'record' => VoterRecord::query()->where('idempotency_key', $data['idempotency_key'])->firstOrFail(),
+                'record' => VoterRecord::query()->where('phone', $data['phone'])->firstOrFail(),
                 'created' => false,
             ];
         }

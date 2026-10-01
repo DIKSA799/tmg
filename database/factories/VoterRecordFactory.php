@@ -44,7 +44,7 @@ class VoterRecordFactory extends Factory
             'full_name' => fake()->name(),
             'gender' => fake()->randomElement(Gender::cases())->value,
             'age_band' => fake()->randomElement(AgeBand::cases())->value,
-            'phone' => '+234'.fake()->numerify('803#######'),
+            'phone' => '+234803'.fake()->unique()->numerify('#######'),
             'whatsapp' => '+234'.fake()->numerify('805#######'),
             'email' => fake()->safeEmail(),
             'volunteer_category' => fake()->randomElement(VolunteerCategory::cases())->value,

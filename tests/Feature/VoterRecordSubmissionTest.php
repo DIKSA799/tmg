@@ -164,6 +164,7 @@ class VoterRecordSubmissionTest extends TestCase
             $unit = PollingUnit::factory()->for($ward)->create(['pu_code' => '002']);
 
             $references[] = $this->operator()->postJson('/submissions', $this->payload([
+                'phone' => '0803000000'.($index + 1),
                 'state_id' => $state->id,
                 'lga_id' => $lga->id,
                 'ward_id' => $ward->id,
@@ -177,8 +178,8 @@ class VoterRecordSubmissionTest extends TestCase
 
     public function test_references_are_unique_across_records(): void
     {
-        $first = $this->operator()->postJson('/submissions', $this->payload())->assertCreated();
-        $second = $this->operator()->postJson('/submissions', $this->payload())->assertCreated();
+        $first = $this->operator()->postJson('/submissions', $this->payload(['phone' => '08030000011']))->assertCreated();
+        $second = $this->operator()->postJson('/submissions', $this->payload(['phone' => '08030000012']))->assertCreated();
 
         $this->assertNotSame($first->json('reference'), $second->json('reference'));
     }
@@ -231,7 +232,7 @@ class VoterRecordSubmissionTest extends TestCase
         $this->assertNotNull($record->captured_at);
     }
 
-    public function test_retrying_with_the_same_idempotency_key_creates_one_record(): void
+    public function test_retrying_the_same_phone_creates_one_record(): void
     {
         $payload = $this->payload();
 
@@ -240,8 +241,37 @@ class VoterRecordSubmissionTest extends TestCase
 
         $first->assertCreated()->assertJsonPath('duplicate', false);
         $second->assertOk()->assertJsonPath('duplicate', true);
-        $this->assertSame($first->json('reference'), $second->json('reference'));
         $this->assertDatabaseCount('voter_records', 1);
+    }
+
+    public function test_an_existing_phone_is_reported_without_exposing_the_record(): void
+    {
+        $first = $this->operator()->postJson('/submissions', $this->payload(['phone' => '08030000021']))->assertCreated();
+
+        $second = $this->operator()->postJson('/submissions', $this->payload([
+            'phone' => '08030000021',
+            'full_name' => 'Someone Else',
+            'idempotency_key' => (string) Str::uuid(),
+        ]));
+
+        $second->assertOk()
+            ->assertJsonPath('duplicate', true)
+            ->assertJsonMissingPath('reference')
+            ->assertJsonMissingPath('captured_at');
+
+        $this->assertNotSame($first->json('reference'), $second->json('reference') ?? null);
+        $this->assertDatabaseCount('voter_records', 1);
+        $this->assertDatabaseMissing('voter_records', ['full_name' => 'Someone Else']);
+    }
+
+    public function test_a_new_phone_always_creates_a_new_record_even_with_a_reused_key(): void
+    {
+        $key = (string) Str::uuid();
+
+        $this->operator()->postJson('/submissions', $this->payload(['idempotency_key' => $key, 'phone' => '08030000031']))->assertCreated();
+        $this->operator()->postJson('/submissions', $this->payload(['idempotency_key' => $key, 'phone' => '08030000032']))->assertCreated();
+
+        $this->assertDatabaseCount('voter_records', 2);
     }
 
     public function test_invalid_phone_number_returns_422(): void

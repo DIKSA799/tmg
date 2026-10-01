@@ -37,7 +37,7 @@
             </div>
             <h3 class="mt-5 font-display text-2xl font-bold" data-success-title>Record captured</h3>
             <p class="mt-2 text-sm text-[color:var(--ink-soft)]" data-success-message>Thank you. Your response has been recorded securely.</p>
-            <p class="mt-4 inline-flex items-center gap-2 rounded-full border border-[color:var(--line)] px-4 py-2 font-mono text-xs text-[color:var(--ink-soft)]">
+            <p class="mt-4 inline-flex items-center gap-2 rounded-full border border-[color:var(--line)] px-4 py-2 font-mono text-xs text-[color:var(--ink-soft)]" data-success-reference-row>
                 Reference <span data-success-reference class="font-semibold text-[color:var(--ink)]">—</span>
             </p>
             <div class="mt-7">

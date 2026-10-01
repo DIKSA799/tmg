@@ -16,12 +16,18 @@ class PhoneNumberTest extends TestCase
         return [
             'local with leading zero' => ['0800 000 0000', '+2348000000000'],
             'local without spaces' => ['08031234567', '+2348031234567'],
+            'bare national number' => ['8031234567', '+2348031234567'],
             'already international with spaces' => ['+234 803 123 4567', '+2348031234567'],
             'without plus prefix' => ['2348031234567', '+2348031234567'],
+            'international dialling prefix' => ['002348031234567', '+2348031234567'],
+            'country code with a trunk zero' => ['23408031234567', '+2348031234567'],
+            'brackets and dashes' => ['(0803) 123-4567', '+2348031234567'],
             'already normalised' => ['+2348031234567', '+2348031234567'],
             'numeric separators' => ['0803-123-4567', '+2348031234567'],
             'empty string' => ['', null],
             'no digits' => ['not a number', null],
+            'too short' => ['080312345', null],
+            'landline is rejected' => ['01234567', null],
         ];
     }
 

@@ -48,6 +48,7 @@ class SampleVoterRecordSeeder extends Seeder
         $now = Carbon::now();
         $rows = [];
         $references = app(GenerateVoterReference::class);
+        $sequence = 0;
 
         foreach ($units as $unit) {
             $ward = $unit->ward;
@@ -60,6 +61,7 @@ class SampleVoterRecordSeeder extends Seeder
                 ->subMinutes(mt_rand(0, 1439));
 
             $prefix = ['803', '806', '810', '703', '706', '813', '903', '906', '708', '802'][mt_rand(0, 9)];
+            $sequence++;
 
             $rows[] = [
                 'public_id' => (string) Str::uuid(),
@@ -81,7 +83,7 @@ class SampleVoterRecordSeeder extends Seeder
                     AgeBand::FiftyFiveToSixtyFour->value,
                     AgeBand::SixtyFivePlus->value,
                 ]),
-                'phone' => '+234'.$prefix.fake()->numerify('#######'),
+                'phone' => '+234'.$prefix.str_pad((string) $sequence, 7, '0', STR_PAD_LEFT),
                 'whatsapp' => mt_rand(1, 100) <= 72 ? '+234'.$prefix.fake()->numerify('#######') : null,
                 'email' => mt_rand(1, 100) <= 55 ? fake()->safeEmail() : null,
                 'volunteer_category' => fake()->randomElement(VolunteerCategory::cases())->value,
