@@ -98,14 +98,14 @@
                 <div class="min-w-0">
                     <label class="field-label" for="phone">Mobile number <span class="req">*</span></label>
                     <input id="phone" name="phone" type="tel" class="input" placeholder="0800 000 0000" inputmode="tel" autocomplete="tel" required>
-                    <p class="field-hint">Stored in +234 format.</p>
+                    <!-- <p class="field-hint">Stored in +234 format.</p> -->
                     <p class="field-error" data-error-for="phone" hidden></p>
                 </div>
 
                 <div class="min-w-0">
                     <label class="field-label" for="whatsapp">WhatsApp number</label>
                     <input id="whatsapp" name="whatsapp" type="tel" class="input" placeholder="0800 000 0000" inputmode="tel" autocomplete="tel">
-                    <p class="field-hint">Optional · stored in +234 format.</p>
+                    <!-- <p class="field-hint">Optional · stored in +234 format.</p> -->
                     <p class="field-error" data-error-for="whatsapp" hidden></p>
                 </div>
 
