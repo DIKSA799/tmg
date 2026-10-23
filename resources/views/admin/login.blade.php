@@ -1,5 +1,9 @@
 <x-layouts.admin :chrome="false" title="Console access">
     <div class="admin-login-wrap">
+        <div class="admin-login-theme">
+            <x-theme-toggle />
+        </div>
+
         <div class="admin-login-card">
             <div class="flex items-center gap-3">
                 <img src="{{ asset('t2.png') }}" alt="" width="2413" height="2875" class="brand-logo">

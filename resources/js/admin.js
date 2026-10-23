@@ -1,25 +1,76 @@
 import Chart from 'chart.js/auto';
-import { initGeoMap } from './geo-map';
+import { initGeoMap, refreshGeoMap } from './geo-map';
+import { initThemeToggle } from './theme';
 
-const COLORS = {
+const FALLBACK = {
     accent: '#ff3b41',
-    blue: '#5b8cff',
+    blue: '#1b4db1',
     amber: '#ffb020',
     green: '#2fd07f',
     violet: '#a97bff',
     grey: '#8b8b93',
     teal: '#3fd0c9',
     rose: '#ff8fa3',
-    grid: 'rgba(255, 255, 255, 0.07)',
     text: '#c6b9b9',
+    grid: 'rgba(255, 255, 255, 0.07)',
+    surface: '#161111',
+    ink: '#f7f0f0',
 };
-
-const SERIES = [COLORS.accent, COLORS.blue, COLORS.amber, COLORS.green, COLORS.violet, COLORS.teal, COLORS.rose, COLORS.grey];
 
 const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 const charts = new Map();
 
+let latestData = null;
+
 const fmt = (value) => new Intl.NumberFormat('en-GB').format(Number(value ?? 0));
+
+function isDark() {
+    return document.documentElement.getAttribute('data-theme') === 'dark';
+}
+
+function cssVar(name, fallback) {
+    return getComputedStyle(document.documentElement).getPropertyValue(name).trim() || fallback;
+}
+
+function palette() {
+    return {
+        accent: cssVar('--accent', FALLBACK.accent),
+        blue: cssVar('--flag-blue', FALLBACK.blue),
+        amber: FALLBACK.amber,
+        green: FALLBACK.green,
+        violet: FALLBACK.violet,
+        grey: isDark() ? FALLBACK.grey : '#6d6464',
+        teal: FALLBACK.teal,
+        rose: FALLBACK.rose,
+        text: cssVar('--ink-soft', FALLBACK.text),
+        grid: cssVar('--line', FALLBACK.grid),
+        surface: cssVar('--paper-raised', FALLBACK.surface),
+        ink: cssVar('--ink', FALLBACK.ink),
+    };
+}
+
+function series() {
+    const colors = palette();
+
+    return [colors.accent, colors.blue, colors.amber, colors.green, colors.violet, colors.teal, colors.rose, colors.grey];
+}
+
+function withAlpha(color, alpha) {
+    const value = String(color ?? '').trim();
+
+    if (value.startsWith('#')) {
+        const hex = value.slice(1);
+        const full = hex.length === 3 ? hex.split('').map((character) => character + character).join('') : hex;
+
+        if (full.length === 6) {
+            const int = Number.parseInt(full, 16);
+
+            return `rgba(${(int >> 16) & 255}, ${(int >> 8) & 255}, ${int & 255}, ${alpha})`;
+        }
+    }
+
+    return value;
+}
 
 function escapeHtml(value) {
     return String(value ?? '').replace(/[&<>"']/g, (character) => ({
@@ -54,40 +105,46 @@ function tween(element, from, to, suffix) {
 }
 
 function tooltip() {
+    const colors = palette();
+    const dark = isDark();
+
     return {
-        backgroundColor: 'rgba(10, 8, 8, 0.95)',
-        borderColor: 'rgba(255, 255, 255, 0.14)',
+        backgroundColor: dark ? 'rgba(10, 8, 8, 0.95)' : 'rgba(255, 255, 255, 0.97)',
+        borderColor: colors.grid,
         borderWidth: 1,
         padding: 10,
         cornerRadius: 10,
-        titleColor: '#ffffff',
-        bodyColor: COLORS.text,
+        titleColor: colors.ink,
+        bodyColor: colors.text,
         displayColors: true,
         usePointStyle: true,
     };
 }
 
 function axes({ horizontal = false } = {}) {
+    const colors = palette();
+
     if (horizontal) {
         return {
-            x: { beginAtZero: true, grid: { color: COLORS.grid }, ticks: { color: COLORS.text, precision: 0 } },
-            y: { grid: { display: false }, ticks: { color: COLORS.text } },
+            x: { beginAtZero: true, grid: { color: colors.grid }, ticks: { color: colors.text, precision: 0 } },
+            y: { grid: { display: false }, ticks: { color: colors.text } },
         };
     }
 
     return {
-        x: { grid: { display: false }, ticks: { color: COLORS.text, maxRotation: 0, autoSkipPadding: 14 } },
-        y: { beginAtZero: true, grid: { color: COLORS.grid }, ticks: { color: COLORS.text, precision: 0 } },
+        x: { grid: { display: false }, ticks: { color: colors.text, maxRotation: 0, autoSkipPadding: 14 } },
+        y: { beginAtZero: true, grid: { color: colors.grid }, ticks: { color: colors.text, precision: 0 } },
     };
 }
 
 function lineConfig(data) {
+    const colors = palette();
     const canvas = document.getElementById('chart-trend');
     const height = canvas?.parentElement?.clientHeight ?? 240;
     const gradient = canvas?.getContext('2d').createLinearGradient(0, 0, 0, height);
 
-    gradient?.addColorStop(0, 'rgba(255, 59, 65, 0.45)');
-    gradient?.addColorStop(1, 'rgba(255, 59, 65, 0)');
+    gradient?.addColorStop(0, withAlpha(colors.accent, 0.42));
+    gradient?.addColorStop(1, withAlpha(colors.accent, 0));
 
     return {
         type: 'line',
@@ -96,15 +153,15 @@ function lineConfig(data) {
             datasets: [{
                 label: 'Records',
                 data: data.series.values,
-                borderColor: COLORS.accent,
-                backgroundColor: gradient ?? 'rgba(255, 59, 65, 0.2)',
+                borderColor: colors.accent,
+                backgroundColor: gradient ?? withAlpha(colors.accent, 0.2),
                 borderWidth: 2,
                 fill: true,
                 tension: 0.38,
                 pointRadius: 0,
                 pointHoverRadius: 5,
-                pointHoverBackgroundColor: COLORS.accent,
-                pointHoverBorderColor: '#fff',
+                pointHoverBackgroundColor: colors.accent,
+                pointHoverBorderColor: colors.surface,
                 pointHoverBorderWidth: 2,
             }],
         },
@@ -120,6 +177,7 @@ function lineConfig(data) {
 }
 
 function doughnutConfig(labels, values, { cutout = '62%' } = {}) {
+    const colors = palette();
     const total = values.reduce((sum, value) => sum + value, 0);
 
     return {
@@ -128,8 +186,8 @@ function doughnutConfig(labels, values, { cutout = '62%' } = {}) {
             labels,
             datasets: [{
                 data: values,
-                backgroundColor: SERIES,
-                borderColor: 'rgba(11, 9, 9, 0.92)',
+                backgroundColor: series(),
+                borderColor: colors.surface,
                 borderWidth: 2,
                 hoverOffset: 10,
             }],
@@ -142,7 +200,7 @@ function doughnutConfig(labels, values, { cutout = '62%' } = {}) {
             plugins: {
                 legend: {
                     position: 'bottom',
-                    labels: { color: COLORS.text, usePointStyle: true, pointStyle: 'circle', boxWidth: 8, boxHeight: 8, padding: 12 },
+                    labels: { color: colors.text, usePointStyle: true, pointStyle: 'circle', boxWidth: 8, boxHeight: 8, padding: 12 },
                 },
                 tooltip: {
                     ...tooltip(),
@@ -159,7 +217,9 @@ function doughnutConfig(labels, values, { cutout = '62%' } = {}) {
     };
 }
 
-function barConfig(labels, values, { horizontal = false, color = COLORS.accent } = {}) {
+function barConfig(labels, values, { horizontal = false, color = null } = {}) {
+    const colors = palette();
+
     return {
         type: 'bar',
         data: {
@@ -167,7 +227,7 @@ function barConfig(labels, values, { horizontal = false, color = COLORS.accent }
             datasets: [{
                 label: 'Records',
                 data: values,
-                backgroundColor: horizontal ? values.map((_, index) => SERIES[index % SERIES.length]) : color,
+                backgroundColor: horizontal ? values.map((_, index) => series()[index % series().length]) : (color ?? colors.accent),
                 borderRadius: 8,
                 borderSkipped: false,
                 maxBarThickness: 34,
@@ -286,6 +346,8 @@ function renderStates(rows) {
 }
 
 function render(data, { animateKpis = false } = {}) {
+    latestData = data;
+
     renderKpis(data.kpis, animateKpis);
 
     renderChart('chart-trend', lineConfig(data));
@@ -294,8 +356,8 @@ function render(data, { animateKpis = false } = {}) {
     renderChart('chart-pvc', doughnutConfig(data.pvc.labels, data.pvc.values, { cutout: '58%' }));
     renderChart('chart-voter', doughnutConfig(data.voter_status.labels, data.voter_status.values, { cutout: '58%' }));
     renderChart('chart-lgas', barConfig(data.top_lgas.map((item) => item.label), data.top_lgas.map((item) => item.total), { horizontal: true }));
-    renderChart('chart-languages', barConfig(data.languages.labels, data.languages.values, { color: COLORS.blue }));
-    renderChart('chart-channels', barConfig(data.channels.labels, data.channels.values, { color: COLORS.amber }));
+    renderChart('chart-languages', barConfig(data.languages.labels, data.languages.values, { color: palette().blue }));
+    renderChart('chart-channels', barConfig(data.channels.labels, data.channels.values, { color: palette().amber }));
 
     renderCoverage(data.coverage);
     renderLeaderboard('top_wards', data.top_wards);
@@ -320,13 +382,85 @@ function setStatus(text) {
     }
 }
 
+function initSidebar() {
+    const sidebar = document.querySelector('[data-admin-sidebar]');
+    if (!sidebar) {
+        return;
+    }
+
+    const backdrop = document.querySelector('[data-sidebar-backdrop]');
+    const toggles = Array.from(document.querySelectorAll('[data-sidebar-toggle]'));
+    const closers = Array.from(document.querySelectorAll('[data-sidebar-close]'));
+
+    const setOpen = (open) => {
+        sidebar.classList.toggle('is-open', open);
+        backdrop?.classList.toggle('is-open', open);
+        document.body.classList.toggle('admin-nav-open', open);
+
+        toggles.forEach((button) => button.setAttribute('aria-expanded', String(open)));
+    };
+
+    toggles.forEach((button) => {
+        button.addEventListener('click', () => setOpen(!sidebar.classList.contains('is-open')));
+    });
+
+    closers.forEach((button) => {
+        button.addEventListener('click', () => setOpen(false));
+    });
+
+    sidebar.querySelectorAll('.admin-nav-link').forEach((link) => {
+        link.addEventListener('click', () => setOpen(false));
+    });
+
+    document.addEventListener('keydown', (event) => {
+        if (event.key === 'Escape') {
+            setOpen(false);
+        }
+    });
+
+    window.addEventListener('resize', () => {
+        if (window.innerWidth > 1024) {
+            setOpen(false);
+        }
+    });
+}
+
+function watchTheme() {
+    let previous = document.documentElement.getAttribute('data-theme');
+
+    new MutationObserver(() => {
+        const next = document.documentElement.getAttribute('data-theme');
+
+        if (next === previous) {
+            return;
+        }
+
+        previous = next;
+
+        Chart.defaults.color = palette().text;
+
+        charts.forEach((chart) => chart.destroy());
+        charts.clear();
+
+        if (latestData) {
+            render(latestData);
+        }
+
+        refreshGeoMap();
+    }).observe(document.documentElement, { attributes: true, attributeFilter: ['data-theme'] });
+}
+
 function boot() {
+    initThemeToggle();
+    initSidebar();
+    watchTheme();
+
     const bootstrap = window.__ADMIN;
     if (!bootstrap) {
         return;
     }
 
-    Chart.defaults.color = COLORS.text;
+    Chart.defaults.color = palette().text;
     Chart.defaults.font.family = getComputedStyle(document.body).fontFamily;
 
     let currentRange = bootstrap.analytics.range;

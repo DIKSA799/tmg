@@ -1211,10 +1211,38 @@
     /* ------------------------------------------------------------------ *
      *  Operations console
      * ------------------------------------------------------------------ */
+    body.admin-nav-open {
+        overflow: hidden;
+    }
+
+    /* Calmer structural backdrop: soft red/grey light with fine blueprint
+       lines instead of noise, so the console feels composed, not busy. */
+    body.admin-surface::before {
+        z-index: -3;
+        filter: none;
+        background:
+            radial-gradient(52rem 36rem at 88% -12%, color-mix(in oklab, var(--accent) 16%, transparent), transparent 62%),
+            radial-gradient(46rem 34rem at -10% 108%, color-mix(in oklab, var(--accent-deep) 14%, transparent), transparent 60%),
+            radial-gradient(40rem 30rem at 52% 48%, color-mix(in oklab, var(--flag-blue) 7%, transparent), transparent 68%);
+    }
+
+    body.admin-surface::after {
+        z-index: -2;
+        opacity: 1;
+        mix-blend-mode: normal;
+        background-image:
+            repeating-linear-gradient(118deg, transparent 0 88px, color-mix(in oklab, var(--ink) 4%, transparent) 88px 89px),
+            repeating-linear-gradient(28deg, transparent 0 88px, color-mix(in oklab, var(--ink) 3%, transparent) 88px 89px);
+        background-size: auto;
+        -webkit-mask-image: radial-gradient(130% 100% at 80% 0%, #000 0%, transparent 64%);
+        mask-image: radial-gradient(130% 100% at 80% 0%, #000 0%, transparent 64%);
+    }
+
     .admin-shell {
         display: grid;
-        grid-template-columns: 16.5rem minmax(0, 1fr);
+        grid-template-columns: 17.5rem minmax(0, 1fr);
         min-height: 100dvh;
+        position: relative;
     }
 
     .admin-sidebar {
@@ -1224,88 +1252,212 @@
         height: 100dvh;
         display: flex;
         flex-direction: column;
-        gap: 1.1rem;
-        padding: 1.2rem 1rem;
+        gap: 1.15rem;
+        padding: 1.35rem 1rem 1.1rem;
         border-right: 1px solid var(--line);
-        background: color-mix(in oklab, var(--paper-raised) 72%, transparent);
-        -webkit-backdrop-filter: blur(14px);
-        backdrop-filter: blur(14px);
+        background:
+            radial-gradient(18rem 14rem at 40% -8%, color-mix(in oklab, var(--accent) 18%, transparent), transparent 72%),
+            linear-gradient(180deg, color-mix(in oklab, var(--paper-raised) 94%, transparent), color-mix(in oklab, var(--paper) 90%, transparent));
+        -webkit-backdrop-filter: blur(20px) saturate(140%);
+        backdrop-filter: blur(20px) saturate(140%);
+        z-index: 50;
+        overflow-y: auto;
+        overscroll-behavior: contain;
+    }
+
+    .admin-sidebar::before {
+        content: '';
+        position: absolute;
+        inset: 0;
+        pointer-events: none;
+        background:
+            repeating-linear-gradient(158deg, transparent 0 26px, color-mix(in oklab, var(--ink) 3.5%, transparent) 26px 27px),
+            linear-gradient(180deg, transparent 52%, color-mix(in oklab, var(--paper) 24%, transparent));
+        -webkit-mask-image: linear-gradient(to bottom, #000, transparent 68%);
+        mask-image: linear-gradient(to bottom, #000, transparent 68%);
+    }
+
+    .admin-sidebar::after {
+        content: '';
+        position: absolute;
+        top: 1.4rem;
+        bottom: 1.4rem;
+        right: -1px;
+        width: 1px;
+        pointer-events: none;
+        background: linear-gradient(180deg, transparent, color-mix(in oklab, var(--accent) 60%, transparent) 26%, transparent 82%);
+    }
+
+    .admin-sidebar > * {
+        position: relative;
+        z-index: 1;
+    }
+
+    .admin-sidebar-head {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 0.5rem;
+        padding-bottom: 0.95rem;
+        border-bottom: 1px solid var(--line);
     }
 
     .admin-brand {
         display: flex;
         align-items: center;
-        gap: 0.7rem;
-        padding: 0.25rem 0.35rem;
+        gap: 0.75rem;
+        padding: 0.15rem 0.35rem;
         text-decoration: none;
+        min-width: 0;
     }
 
     .admin-brand img {
-        height: 2.2rem;
+        height: 2.35rem;
         width: auto;
-        max-width: 5.5rem;
+        max-width: 5.75rem;
         object-fit: contain;
+        filter: drop-shadow(0 12px 20px color-mix(in oklab, var(--accent) 24%, transparent));
     }
 
     .admin-brand-name {
+        display: block;
         font-family: var(--font-display);
-        font-size: 0.88rem;
+        font-size: 0.9rem;
         font-weight: 700;
         line-height: 1.1;
     }
 
     .admin-brand-sub {
-        font-size: 0.6rem;
-        font-weight: 600;
-        letter-spacing: 0.16em;
+        display: block;
+        margin-top: 0.2rem;
+        font-size: 0.58rem;
+        font-weight: 700;
+        letter-spacing: 0.2em;
         text-transform: uppercase;
         color: var(--ink-mute);
+    }
+
+    .admin-sidebar-close {
+        display: none;
+        flex: none;
+        align-items: center;
+        justify-content: center;
+        width: 2.15rem;
+        height: 2.15rem;
+        border-radius: 0.7rem;
+        border: 1px solid var(--line);
+        background: color-mix(in oklab, var(--paper-raised) 80%, transparent);
+        color: var(--ink-soft);
+        cursor: pointer;
+        transition: color 0.16s ease, transform 0.16s ease;
+    }
+
+    .admin-sidebar-close:hover {
+        color: var(--accent);
+        transform: rotate(90deg);
     }
 
     .admin-nav {
         display: flex;
         flex-direction: column;
-        gap: 0.25rem;
+        gap: 0.3rem;
+    }
+
+    .admin-nav-label {
+        padding: 0 0.55rem;
+        margin-bottom: 0.15rem;
+        font-size: 0.58rem;
+        font-weight: 800;
+        letter-spacing: 0.2em;
+        text-transform: uppercase;
+        color: var(--ink-mute);
     }
 
     .admin-nav-link {
+        position: relative;
         display: flex;
         align-items: center;
         gap: 0.7rem;
-        padding: 0.68rem 0.8rem;
-        border-radius: 0.85rem;
-        font-size: 0.86rem;
+        padding: 0.72rem 0.8rem;
+        border-radius: 0.9rem;
+        border: 1px solid transparent;
+        font-size: 0.87rem;
         font-weight: 600;
         color: var(--ink-soft);
         text-decoration: none;
-        transition: background 0.16s ease, color 0.16s ease, transform 0.16s ease;
+        transition: background 0.16s ease, color 0.16s ease, border-color 0.16s ease, transform 0.16s ease;
+    }
+
+    .admin-nav-link svg {
+        flex: none;
+        opacity: 0.85;
     }
 
     .admin-nav-link:hover {
         transform: translateX(2px);
-        background: color-mix(in oklab, var(--accent) 12%, transparent);
+        background: color-mix(in oklab, var(--accent) 10%, transparent);
+        border-color: color-mix(in oklab, var(--accent) 22%, transparent);
         color: var(--ink);
     }
 
     .admin-nav-link.is-active {
         background: linear-gradient(135deg, var(--accent), var(--accent-deep));
+        border-color: transparent;
         color: #fff;
-        box-shadow: 0 12px 26px -14px color-mix(in oklab, var(--accent) 85%, black);
+        box-shadow: 0 14px 28px -16px color-mix(in oklab, var(--accent) 90%, black), inset 0 1px 0 rgba(255, 255, 255, 0.28);
+    }
+
+    .admin-nav-link.is-active svg {
+        opacity: 1;
+    }
+
+    .admin-nav-link.is-active::after {
+        content: '';
+        position: absolute;
+        right: 0.6rem;
+        width: 0.35rem;
+        height: 0.35rem;
+        border-radius: 999px;
+        background: rgba(255, 255, 255, 0.9);
+        box-shadow: 0 0 0 4px rgba(255, 255, 255, 0.16);
     }
 
     .admin-sidebar-foot {
         margin-top: auto;
         display: flex;
         flex-direction: column;
-        gap: 0.6rem;
-        padding-top: 0.9rem;
+        gap: 0.55rem;
+        padding-top: 1rem;
         border-top: 1px solid var(--line);
+    }
+
+    .admin-sidebar-foot .admin-pill {
+        justify-content: flex-start;
+        padding: 0.45rem 0.7rem;
+    }
+
+    .admin-nav-backdrop {
+        position: fixed;
+        inset: 0;
+        z-index: 45;
+        background: color-mix(in oklab, #050807 55%, transparent);
+        -webkit-backdrop-filter: blur(5px);
+        backdrop-filter: blur(5px);
+        opacity: 0;
+        visibility: hidden;
+        transition: opacity 0.22s ease, visibility 0.22s ease;
+    }
+
+    .admin-nav-backdrop.is-open {
+        opacity: 1;
+        visibility: visible;
     }
 
     .admin-main {
         display: flex;
         flex-direction: column;
         min-width: 0;
+        position: relative;
     }
 
     .admin-topbar {
@@ -1313,15 +1465,60 @@
         flex-wrap: wrap;
         align-items: center;
         justify-content: space-between;
-        gap: 1rem;
-        padding: 1.15rem 1.5rem;
+        gap: 0.9rem;
+        padding: 1.05rem 1.5rem;
         border-bottom: 1px solid var(--line);
-        background: color-mix(in oklab, var(--paper) 82%, transparent);
-        -webkit-backdrop-filter: blur(12px);
-        backdrop-filter: blur(12px);
+        background: color-mix(in oklab, var(--paper) 74%, transparent);
+        -webkit-backdrop-filter: blur(18px) saturate(150%);
+        backdrop-filter: blur(18px) saturate(150%);
         position: sticky;
         top: 0;
-        z-index: 20;
+        z-index: 30;
+    }
+
+    .admin-topbar::after {
+        content: '';
+        position: absolute;
+        inset: auto 0 0;
+        height: 1px;
+        background: linear-gradient(90deg, color-mix(in oklab, var(--accent) 62%, transparent), transparent 46%);
+        opacity: 0.7;
+        pointer-events: none;
+    }
+
+    .admin-topbar-lead {
+        display: flex;
+        align-items: center;
+        gap: 0.8rem;
+        min-width: 0;
+    }
+
+    .admin-topbar-actions {
+        display: flex;
+        flex-wrap: wrap;
+        align-items: center;
+        gap: 0.5rem;
+    }
+
+    .admin-menu-btn {
+        display: none;
+        flex: none;
+        align-items: center;
+        justify-content: center;
+        width: 2.5rem;
+        height: 2.5rem;
+        border-radius: 0.8rem;
+        border: 1px solid var(--line);
+        background: color-mix(in oklab, var(--paper-raised) 70%, transparent);
+        color: var(--ink);
+        cursor: pointer;
+        box-shadow: var(--shadow-neo-sm);
+        transition: color 0.16s ease, transform 0.16s ease;
+    }
+
+    .admin-menu-btn:hover {
+        color: var(--accent);
+        transform: translateY(-1px);
     }
 
     .admin-title {
@@ -1343,15 +1540,48 @@
         flex-direction: column;
         gap: 1.15rem;
         padding: 1.5rem;
+        width: 100%;
+        max-width: 100rem;
     }
 
     .admin-card {
+        position: relative;
+        overflow: hidden;
         border: 1px solid var(--line);
-        border-radius: 20px;
-        background: color-mix(in oklab, var(--paper-raised) 55%, transparent);
-        -webkit-backdrop-filter: blur(16px);
-        backdrop-filter: blur(16px);
-        padding: 1.15rem;
+        border-radius: 22px;
+        background: linear-gradient(158deg, color-mix(in oklab, var(--paper-raised) 78%, transparent), color-mix(in oklab, var(--paper) 62%, transparent));
+        -webkit-backdrop-filter: blur(18px) saturate(140%);
+        backdrop-filter: blur(18px) saturate(140%);
+        box-shadow: 0 24px 60px -44px color-mix(in oklab, var(--ink) 60%, transparent), inset 0 1px 0 rgba(255, 255, 255, 0.14);
+        padding: 1.25rem 1.3rem;
+    }
+
+    .admin-card::before {
+        content: '';
+        position: absolute;
+        right: -3rem;
+        top: -3.75rem;
+        width: 11rem;
+        height: 11rem;
+        border-radius: 50%;
+        pointer-events: none;
+        background: radial-gradient(circle, color-mix(in oklab, var(--accent) 13%, transparent), transparent 68%);
+    }
+
+    .admin-card::after {
+        content: '';
+        position: absolute;
+        inset: 1.15rem auto 1.15rem 0;
+        width: 2px;
+        border-radius: 999px;
+        pointer-events: none;
+        background: linear-gradient(180deg, color-mix(in oklab, var(--accent) 60%, transparent), transparent 72%);
+        opacity: 0.55;
+    }
+
+    .admin-card > * {
+        position: relative;
+        z-index: 1;
     }
 
     .admin-card-title {
@@ -1381,14 +1611,26 @@
         overflow: hidden;
         border: 1px solid var(--line);
         border-radius: 18px;
-        background: color-mix(in oklab, var(--paper-raised) 60%, transparent);
-        padding: 1rem 1.05rem;
-        transition: transform 0.2s cubic-bezier(0.22, 1, 0.36, 1), border-color 0.2s ease;
+        background: linear-gradient(155deg, color-mix(in oklab, var(--paper-raised) 74%, transparent), color-mix(in oklab, var(--paper) 56%, transparent));
+        padding: 1.05rem 1.1rem;
+        box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.1);
+        transition: transform 0.2s cubic-bezier(0.22, 1, 0.36, 1), border-color 0.2s ease, box-shadow 0.2s ease;
     }
 
     .admin-kpi:hover {
         transform: translateY(-3px);
         border-color: color-mix(in oklab, var(--accent) 45%, transparent);
+        box-shadow: 0 20px 34px -28px color-mix(in oklab, var(--accent) 60%, transparent), inset 0 1px 0 rgba(255, 255, 255, 0.12);
+    }
+
+    .admin-kpi::before {
+        content: '';
+        position: absolute;
+        inset: 0 0 auto;
+        height: 2px;
+        pointer-events: none;
+        background: linear-gradient(90deg, var(--accent), color-mix(in oklab, var(--accent) 8%, transparent) 72%);
+        opacity: 0.8;
     }
 
     .admin-kpi::after {
@@ -1586,21 +1828,40 @@
     }
 
     .admin-login-wrap {
+        position: relative;
         display: grid;
         place-items: center;
         min-height: 100dvh;
         padding: 1.5rem;
     }
 
+    .admin-login-theme {
+        position: absolute;
+        top: 1.25rem;
+        right: 1.25rem;
+        z-index: 2;
+    }
+
     .admin-login-card {
+        position: relative;
         width: min(24rem, 100%);
+        overflow: hidden;
         border: 1px solid var(--line);
         border-radius: 26px;
-        background: color-mix(in oklab, var(--paper-raised) 70%, transparent);
-        -webkit-backdrop-filter: blur(20px);
-        backdrop-filter: blur(20px);
+        background: linear-gradient(158deg, color-mix(in oklab, var(--paper-raised) 82%, transparent), color-mix(in oklab, var(--paper) 66%, transparent));
+        -webkit-backdrop-filter: blur(20px) saturate(140%);
+        backdrop-filter: blur(20px) saturate(140%);
         box-shadow: var(--shadow-glass);
         padding: 1.9rem;
+    }
+
+    .admin-login-card::before {
+        content: '';
+        position: absolute;
+        inset: 0 0 auto;
+        height: 2px;
+        pointer-events: none;
+        background: linear-gradient(90deg, var(--accent), color-mix(in oklab, var(--accent) 10%, transparent) 70%);
     }
 
     .admin-pagination {
@@ -1657,30 +1918,82 @@
         }
 
         .admin-sidebar {
-            position: static;
-            height: auto;
-            flex-direction: row;
-            align-items: center;
-            gap: 0.75rem;
-            overflow-x: auto;
-            border-right: 0;
-            border-bottom: 1px solid var(--line);
+            position: fixed;
+            inset: 0 auto 0 0;
+            width: min(19rem, 88vw);
+            height: 100dvh;
+            border-right: 1px solid var(--line);
+            box-shadow: 32px 0 80px -40px rgba(0, 0, 0, 0.7);
+            transform: translateX(-104%);
+            transition: transform 0.28s cubic-bezier(0.22, 1, 0.36, 1);
+            z-index: 50;
         }
 
-        .admin-nav {
-            flex-direction: row;
+        .admin-sidebar.is-open {
+            transform: none;
         }
 
-        .admin-sidebar-foot {
-            margin: 0 0 0 auto;
-            flex-direction: row;
-            align-items: center;
-            border-top: 0;
-            padding-top: 0;
+        .admin-menu-btn,
+        .admin-sidebar-close {
+            display: inline-flex;
+        }
+
+        .admin-topbar {
+            padding: 0.9rem 1.1rem;
         }
 
         .admin-content {
             padding: 1.1rem;
+        }
+    }
+
+    @media (max-width: 720px) {
+        .admin-title {
+            font-size: 1.12rem;
+        }
+
+        .admin-sub {
+            font-size: 0.72rem;
+        }
+
+        .admin-topbar {
+            gap: 0.7rem;
+            padding: 0.8rem 0.9rem;
+        }
+
+        .admin-topbar-actions {
+            width: 100%;
+            justify-content: flex-start;
+        }
+
+        .admin-content {
+            gap: 0.9rem;
+            padding: 0.9rem;
+        }
+
+        .admin-card {
+            padding: 1rem;
+            border-radius: 18px;
+        }
+
+        .admin-kpis {
+            grid-template-columns: repeat(auto-fit, minmax(8.5rem, 1fr));
+        }
+
+        .admin-kpi-value {
+            font-size: 1.5rem;
+        }
+
+        .admin-range button {
+            padding: 0.4rem 0.58rem;
+        }
+
+        .chart-box {
+            height: 13rem;
+        }
+
+        .chart-box-sm {
+            height: 11.5rem;
         }
     }
 

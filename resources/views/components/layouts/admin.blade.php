@@ -6,7 +6,7 @@
 ])
 
 <!DOCTYPE html>
-<html lang="{{ str_replace('_', '-', app()->getLocale()) }}" data-theme="dark">
+<html lang="{{ str_replace('_', '-', app()->getLocale()) }}">
     <head>
         <meta charset="utf-8">
         <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
@@ -17,25 +17,55 @@
 
         <title>{{ $title }} · TMG Console</title>
 
+        {{-- Resolve the console theme before first paint so there is no flash.
+             The console opens dark by default, but a saved light choice wins. --}}
+        <script>
+            (function () {
+                try {
+                    var stored = window.localStorage.getItem('tmg.theme');
+                    var theme = stored === 'light' ? 'light' : 'dark';
+
+                    document.documentElement.setAttribute('data-theme', theme);
+
+                    var meta = document.querySelector('meta[name="theme-color"]');
+                    if (meta) {
+                        meta.setAttribute('content', theme === 'dark' ? '#0b0909' : '#f1eeee');
+                    }
+                } catch (error) {
+                    document.documentElement.setAttribute('data-theme', 'dark');
+                }
+            })();
+        </script>
+
         @fonts
 
         @if (file_exists(public_path('build/manifest.json')) || file_exists(public_path('hot')))
             @vite(['resources/css/app.css', 'resources/js/admin.js'])
         @endif
     </head>
-    <body class="antialiased">
+    <body class="antialiased admin-surface">
         @if ($chrome)
+            <div class="admin-nav-backdrop" data-sidebar-backdrop data-sidebar-close aria-hidden="true"></div>
+
             <div class="admin-shell">
-                <aside class="admin-sidebar">
-                    <a href="{{ route('admin.dashboard') }}" class="admin-brand">
-                        <img src="{{ asset('t2.png') }}" alt="" width="2413" height="2875">
-                        <span>
-                            <span class="admin-brand-name">Tinubu Must Go</span>
-                            <span class="admin-brand-sub">Console</span>
-                        </span>
-                    </a>
+                <aside class="admin-sidebar" id="admin-sidebar" data-admin-sidebar aria-label="Console navigation">
+                    <div class="admin-sidebar-head">
+                        <a href="{{ route('admin.dashboard') }}" class="admin-brand">
+                            <img src="{{ asset('t2.png') }}" alt="" width="2413" height="2875">
+                            <span>
+                                <span class="admin-brand-name">Tinubu Must Go</span>
+                                <span class="admin-brand-sub">Console</span>
+                            </span>
+                        </a>
+
+                        <button type="button" class="admin-sidebar-close" data-sidebar-close aria-label="Close navigation">
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="m6 6 12 12M18 6 6 18" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>
+                        </button>
+                    </div>
 
                     <nav class="admin-nav" aria-label="Console">
+                        <span class="admin-nav-label">Workspace</span>
+
                         <a href="{{ route('admin.dashboard') }}" @class(['admin-nav-link', 'is-active' => request()->routeIs('admin.dashboard')])>
                             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M4 13h6V4H4v9Zm10 7h6v-9h-6v9ZM4 20h6v-4H4v4Zm10-11h6V4h-6v5Z" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round"/></svg>
                             Dashboard
@@ -57,22 +87,36 @@
                         </span>
                         <form method="POST" action="{{ route('admin.logout') }}">
                             @csrf
-                            <button type="submit" class="admin-nav-link w-full cursor-pointer bg-transparent text-left">Sign out</button>
+                            <button type="submit" class="admin-nav-link w-full cursor-pointer bg-transparent text-left">
+                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M15 5h4v14h-4M10 8l-4 4 4 4m-4-4h9" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                                Sign out
+                            </button>
                         </form>
                     </div>
                 </aside>
 
                 <div class="admin-main">
                     <header class="admin-topbar">
-                        <div>
-                            <h1 class="admin-title">{{ $title }}</h1>
-                            @if ($subtitle)
-                                <p class="admin-sub">{{ $subtitle }}</p>
-                            @endif
+                        <div class="admin-topbar-lead">
+                            <button type="button" class="admin-menu-btn" data-sidebar-toggle aria-expanded="false" aria-controls="admin-sidebar" aria-label="Open navigation">
+                                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M4 7h16M4 12h16M4 17h10" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>
+                            </button>
+
+                            <div class="min-w-0">
+                                <h1 class="admin-title">{{ $title }}</h1>
+                                @if ($subtitle)
+                                    <p class="admin-sub">{{ $subtitle }}</p>
+                                @endif
+                            </div>
                         </div>
-                        @if ($actions)
-                            <div class="flex flex-wrap items-center gap-2">{{ $actions }}</div>
-                        @endif
+
+                        <div class="admin-topbar-actions">
+                            @if ($actions)
+                                {{ $actions }}
+                            @endif
+
+                            <x-theme-toggle />
+                        </div>
                     </header>
 
                     <main class="admin-content">

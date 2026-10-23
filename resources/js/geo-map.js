@@ -1,11 +1,30 @@
 const VIEW_HEIGHT = 900;
 const PADDING = 6;
-const NO_DATA_FILL = 'rgba(255, 255, 255, 0.09)';
-const LOW_RGB = [74, 17, 22];
-const HIGH_RGB = [255, 59, 65];
+const DARK_NO_DATA_FILL = 'rgba(255, 255, 255, 0.09)';
+const LIGHT_NO_DATA_FILL = 'rgba(12, 10, 10, 0.10)';
+const DARK_LOW_RGB = [74, 17, 22];
+const DARK_HIGH_RGB = [255, 59, 65];
+const LIGHT_LOW_RGB = [228, 216, 216];
+const LIGHT_HIGH_RGB = [225, 27, 34];
 
 const numberFormat = new Intl.NumberFormat('en-GB');
 const cache = new Map();
+
+let redraw = null;
+
+function isDark() {
+    return document.documentElement.getAttribute('data-theme') === 'dark';
+}
+
+function noDataFill() {
+    return isDark() ? DARK_NO_DATA_FILL : LIGHT_NO_DATA_FILL;
+}
+
+function scaleBounds() {
+    return isDark()
+        ? { low: DARK_LOW_RGB, high: DARK_HIGH_RGB }
+        : { low: LIGHT_LOW_RGB, high: LIGHT_HIGH_RGB };
+}
 
 /**
  * Mirrors Str::slug() on the server so boundary names and database names hash
@@ -78,11 +97,12 @@ function pathFor(geometry, project) {
 
 function fillFor(value, max) {
     if (value <= 0) {
-        return NO_DATA_FILL;
+        return noDataFill();
     }
 
+    const { low, high } = scaleBounds();
     const ratio = Math.sqrt(value / Math.max(1, max));
-    const channel = (index) => Math.round(LOW_RGB[index] + (HIGH_RGB[index] - LOW_RGB[index]) * ratio);
+    const channel = (index) => Math.round(low[index] + (high[index] - low[index]) * ratio);
 
     return `rgb(${channel(0)}, ${channel(1)}, ${channel(2)})`;
 }
@@ -135,7 +155,7 @@ function renderLegend(element, max) {
         <span class="geo-map-legend-label">0</span>
         <span class="geo-map-scale">${steps}</span>
         <span class="geo-map-legend-label">${numberFormat.format(max)}</span>
-        <span class="geo-map-legend-empty"><i style="background:${NO_DATA_FILL}"></i> no records</span>
+        <span class="geo-map-legend-empty"><i style="background:${noDataFill()}"></i> no records</span>
     `;
 }
 
@@ -243,6 +263,15 @@ export function initGeoMap() {
         }
     }));
 
+    redraw = () => {
+        hideTip();
+        show(level);
+    };
+
     bindTooltip();
     show(level);
+}
+
+export function refreshGeoMap() {
+    redraw?.();
 }

@@ -29,3 +29,5 @@
 - Wants geographic data presented visually as an interactive map of Nigeria (states and LGAs), not just tables: a choropleth heat map where denser/darker areas mean more records, with hover tooltips showing the total for that area. Confidence: 0.5
 - Wants admin data tables to be exportable (CSV download honouring the current filters). Confidence: 0.4
 - Expects UI actions to live on the page that owns the data they act on — corrected an export placed on an aggregate/summary page ("no the export should be on records page") — i.e. don't scatter an action onto a related-but-different screen. Confidence: 0.45
+- Expects every new screen to inherit the app's established visual identity — points at an existing page (e.g. the register page) as the source of truth and asks for the new area to "match the vibes of the system" rather than inventing its own look. Confidence: 0.6
+- Prefers calm, composed backdrops over busy textures: subtle abstract/blueprint line patterns and soft grey/red glows that let key surfaces stand out while keeping the page "less chaotic" but still beautiful and professional. Confidence: 0.5
