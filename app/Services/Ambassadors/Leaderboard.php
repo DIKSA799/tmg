@@ -13,8 +13,12 @@ class Leaderboard
     /**
      * @return Collection<int, Nomination>
      */
-    public function zone(int $districtId): Collection
+    public function zone(?int $districtId): Collection
     {
+        if ($districtId === null) {
+            return collect();
+        }
+
         return $this->hydrate($this->cachedIds(
             'tmg.leaderboard.zone.'.$districtId,
             fn (): array => Nomination::query()
@@ -30,8 +34,12 @@ class Leaderboard
     /**
      * @return Collection<int, Nomination>
      */
-    public function state(int $stateId): Collection
+    public function state(?int $stateId): Collection
     {
+        if ($stateId === null) {
+            return collect();
+        }
+
         return $this->hydrate($this->cachedIds(
             'tmg.leaderboard.state.'.$stateId,
             fn (): array => Nomination::query()

@@ -29,31 +29,38 @@ class DashboardController extends Controller
         ]);
 
         $districtId = $ambassador->senatorial_district_id;
+        $zoneAssigned = $districtId !== null;
         $search = trim((string) $request->string('q'));
 
-        $zoneAmbassadors = Ambassador::query()
-            ->inDistrict($districtId)
-            ->search($search)
-            ->with([
-                'lga:id,name',
-                'ward:id,name',
-                'pollingUnit:id,name',
-                'nomination:id,public_id,ambassador_id,votes_count,status',
+        $zoneAmbassadors = $zoneAssigned
+            ? Ambassador::query()
+                ->inDistrict($districtId)
+                ->search($search)
+                ->with([
+                    'lga:id,name',
+                    'ward:id,name',
+                    'pollingUnit:id,name',
+                    'nomination:id,public_id,ambassador_id,votes_count,status',
+                ])
+                ->orderBy('name')
+                ->paginate(18)
+                ->withQueryString()
+            : Ambassador::query()->whereRaw('1 = 0')->paginate(18);
+
+        $stats = $zoneAssigned
+            ? Cache::remember('tmg.zone.stats.'.$districtId, 60, fn (): array => [
+                'ambassadors' => Ambassador::query()->where('senatorial_district_id', $districtId)->count(),
+                'nominations' => Nomination::query()->active()->forDistrict($districtId)->count(),
+                'votes' => (int) Nomination::query()->where('senatorial_district_id', $districtId)->sum('votes_count'),
             ])
-            ->orderBy('name')
-            ->paginate(18)
-            ->withQueryString();
+            : ['ambassadors' => 0, 'nominations' => 0, 'votes' => 0];
 
-        $stats = Cache::remember('tmg.zone.stats.'.$districtId, 60, fn (): array => [
-            'ambassadors' => Ambassador::query()->where('senatorial_district_id', $districtId)->count(),
-            'nominations' => Nomination::query()->active()->forDistrict($districtId)->count(),
-            'votes' => (int) Nomination::query()->where('senatorial_district_id', $districtId)->sum('votes_count'),
-        ]);
-
-        $myVote = DB::table('nomination_votes')
-            ->where('voter_id', $ambassador->id)
-            ->where('senatorial_district_id', $districtId)
-            ->first();
+        $myVote = $zoneAssigned
+            ? DB::table('nomination_votes')
+                ->where('voter_id', $ambassador->id)
+                ->where('senatorial_district_id', $districtId)
+                ->first()
+            : null;
 
         $myVotedNomination = $myVote === null
             ? null
@@ -78,6 +85,7 @@ class DashboardController extends Controller
             'invitations' => $invitations,
             'zoneTop' => $leaderboard->zone($districtId)->take(5),
             'myRank' => $leaderboard->rankOf($ambassador, $ambassador->nomination),
+            'zoneAssigned' => $zoneAssigned,
         ]);
     }
 }

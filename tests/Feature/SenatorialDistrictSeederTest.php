@@ -2,9 +2,13 @@
 
 namespace Tests\Feature;
 
+use App\Models\Ambassador;
 use App\Models\Lga;
+use App\Models\PollingUnit;
 use App\Models\SenatorialDistrict;
 use App\Models\State;
+use App\Models\VoterRecord;
+use App\Models\Ward;
 use Database\Seeders\SenatorialDistrictSeeder;
 use Illuminate\Foundation\Testing\LazilyRefreshDatabase;
 use Illuminate\Support\Facades\DB;
@@ -94,5 +98,47 @@ class SenatorialDistrictSeederTest extends TestCase
             'Abia Central',
             $lga->fresh()->senatorialDistrict?->name,
         );
+    }
+
+    public function test_the_seeder_repairs_ambassadors_created_without_a_district(): void
+    {
+        $state = State::factory()->create(['name' => 'Abia', 'slug' => 'abia', 'code' => '1']);
+        $lga = Lga::factory()->for($state)->create(['name' => 'Ikwuano', 'slug' => 'ikwuano', 'code' => '1']);
+        $ward = Ward::factory()->for($lga)->create();
+        $unit = PollingUnit::factory()->for($ward)->create();
+
+        $record = VoterRecord::factory()->create([
+            'reference' => 'TMG-ABI-IKW-ABC-001-ABC123',
+            'phone' => '+2348031234567',
+            'email' => 'abia@example.com',
+            'state_id' => $state->id,
+            'lga_id' => $lga->id,
+            'ward_id' => $ward->id,
+            'polling_unit_id' => $unit->id,
+        ]);
+
+        $ambassador = Ambassador::factory()->create([
+            'voter_record_id' => $record->id,
+            'name' => $record->full_name,
+            'phone' => $record->phone,
+            'email' => $record->email,
+            'password' => $record->reference,
+            'state_id' => $state->id,
+            'lga_id' => $lga->id,
+            'ward_id' => $ward->id,
+            'polling_unit_id' => $unit->id,
+            'senatorial_district_id' => null,
+        ]);
+
+        $this->assertNull($ambassador->senatorial_district_id);
+
+        $this->seed(SenatorialDistrictSeeder::class);
+
+        $central = SenatorialDistrict::query()
+            ->where('state_id', $state->id)
+            ->where('slug', 'abia-central')
+            ->sole();
+
+        $this->assertSame($central->id, $ambassador->fresh()->senatorial_district_id);
     }
 }

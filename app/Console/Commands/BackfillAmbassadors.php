@@ -74,6 +74,16 @@ class BackfillAmbassadors extends Command
 
         $this->line('Login identity: phone number or email. Password: the TMG number.');
 
+        $unassigned = Ambassador::query()->whereNull('senatorial_district_id')->count();
+
+        if ($unassigned > 0) {
+            $this->newLine();
+            $this->warn(sprintf(
+                '%d ambassador account(s) have no senatorial district. Run: php artisan db:seed --class=SenatorialDistrictSeeder',
+                $unassigned,
+            ));
+        }
+
         return $failed === 0 ? self::SUCCESS : self::FAILURE;
     }
 }

@@ -7,6 +7,17 @@
 
 <x-layouts.tmgamb title="Dashboard · TMG Ambassadors" description="Your senatorial zone dashboard.">
     <div class="space-y-4">
+        @unless ($zoneAssigned)
+            <section class="amb-card amb-card-glow">
+                <h2 class="amb-card-title">Your senatorial zone is being assigned</h2>
+                <p class="amb-card-sub">
+                    Your registration is confirmed, but we could not match your LGA to a senatorial
+                    district yet. Please check back shortly or contact the TMG desk so we can place
+                    you in the right zone.
+                </p>
+            </section>
+        @endunless
+
         <section class="amb-hero">
             <div class="flex flex-wrap items-start justify-between gap-5">
                 <div class="min-w-0">
@@ -37,11 +48,13 @@
                             <svg width="15" height="15" viewBox="0 0 24 24" fill="none" aria-hidden="true"><rect x="9" y="9" width="11" height="11" rx="2" stroke="currentColor" stroke-width="1.7"/><path d="M15 5H6a2 2 0 0 0-2 2v9" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/></svg>
                             <span data-copy-label>Copy my share link</span>
                         </button>
-                    @else
+                    @elseif ($zoneAssigned)
                         <button type="button" class="btn btn-primary" data-open="nominate-modal">
                             Nominate myself
                             <svg width="15" height="15" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M12 5v14M5 12h14" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
                         </button>
+                    @else
+                        <span class="amb-badge">Zone assignment pending</span>
                     @endif
 
                     <a href="{{ route('tmgamb.leaderboard') }}" class="btn btn-ghost">Open the leaderboard</a>
@@ -253,7 +266,7 @@
         </section>
     </div>
 
-    @unless ($nomination)
+    @if ($zoneAssigned && ! $nomination)
         <div class="modal-backdrop" id="nominate-modal" data-modal>
             <div class="modal" role="dialog" aria-modal="true" aria-labelledby="nominate-modal-title">
                 <div class="modal-head">
@@ -297,5 +310,5 @@
                 </form>
             </div>
         </div>
-    @endunless
+    @endif
 </x-layouts.tmgamb>

@@ -10,6 +10,16 @@
 
 <x-layouts.tmgamb title="Leaderboard · TMG Ambassadors" description="Your senatorial zone leaderboard and state top five.">
     <div class="space-y-4">
+        @unless ($zoneAssigned)
+            <section class="amb-card">
+                <h2 class="amb-card-title">Your senatorial zone is being assigned</h2>
+                <p class="amb-card-sub">
+                    We could not match your LGA to a senatorial district yet. Your state top five is
+                    still shown below; your zone ranking will appear as soon as the assignment is repaired.
+                </p>
+            </section>
+        @endunless
+
         <section class="amb-hero">
             <div class="flex flex-wrap items-end justify-between gap-4">
                 <div>

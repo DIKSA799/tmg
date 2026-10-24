@@ -2,6 +2,7 @@
 
 namespace Database\Seeders;
 
+use App\Models\Ambassador;
 use App\Models\Lga;
 use App\Models\SenatorialDistrict;
 use App\Models\State;
@@ -37,6 +38,7 @@ class SenatorialDistrictSeeder extends Seeder
 
         $created = 0;
         $updated = 0;
+        $repaired = 0;
 
         foreach ($data as $stateName => $districts) {
             $state = $states->get(Str::lower($stateName));
@@ -77,14 +79,34 @@ class SenatorialDistrictSeeder extends Seeder
                 Lga::query()->whereIn('id', $ids)->update([
                     'senatorial_district_id' => $district->id,
                 ]);
+
+                // Repair ambassador accounts created before the mapping ran
+                // (or with a stale district) so their dashboards have a zone.
+                $repaired += Ambassador::query()
+                    ->whereIn('lga_id', $ids)
+                    ->where(function ($query) use ($district): void {
+                        $query->whereNull('senatorial_district_id')
+                            ->orWhere('senatorial_district_id', '!=', $district->id);
+                    })
+                    ->update([
+                        'senatorial_district_id' => $district->id,
+                        'updated_at' => now(),
+                    ]);
             }
         }
 
         $this->command?->info(sprintf(
-            'Senatorial districts synced: %d created, %d updated, %d LGAs mapped.',
+            'Senatorial districts synced: %d created, %d updated, %d LGAs mapped, %d ambassador(s) assigned.',
             $created,
             $updated,
             Lga::query()->whereNotNull('senatorial_district_id')->count(),
+            $repaired,
         ));
+
+        $unassigned = Ambassador::query()->whereNull('senatorial_district_id')->count();
+
+        if ($unassigned > 0) {
+            $this->command?->warn("{$unassigned} ambassador(s) still have no district. Check that their LGAs exist in the dataset.");
+        }
     }
 }

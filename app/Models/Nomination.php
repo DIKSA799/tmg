@@ -99,8 +99,14 @@ class Nomination extends Model
      * @param  Builder<Nomination>  $query
      * @return Builder<Nomination>
      */
-    public function scopeForDistrict(Builder $query, int $districtId): Builder
+    public function scopeForDistrict(Builder $query, ?int $districtId): Builder
     {
+        // An ambassador without an assigned district has no zone to show.
+        // Returning no rows keeps the page alive while the zone is repaired.
+        if ($districtId === null) {
+            return $query->whereRaw('1 = 0');
+        }
+
         return $query->where('senatorial_district_id', $districtId);
     }
 

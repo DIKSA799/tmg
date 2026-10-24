@@ -26,6 +26,7 @@ class LeaderboardController extends Controller
             'zoneLeaders' => $leaderboard->zone($ambassador->senatorial_district_id),
             'stateLeaders' => $leaderboard->state($ambassador->state_id),
             'myRank' => $leaderboard->rankOf($ambassador, $ambassador->nomination),
+            'zoneAssigned' => $ambassador->senatorial_district_id !== null,
         ]);
     }
 }

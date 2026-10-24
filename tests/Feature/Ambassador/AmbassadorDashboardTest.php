@@ -145,6 +145,31 @@ class AmbassadorDashboardTest extends TestCase
             ->assertNotFound();
     }
 
+    public function test_the_dashboard_and_leaderboard_survive_an_unassigned_district(): void
+    {
+        $zone = $this->makeZone();
+        $me = $this->ambassadorInZone($zone, ['senatorial_district_id' => null]);
+
+        $this->actAsAmbassador($me)
+            ->get('/tmgamb/dashboard')
+            ->assertOk()
+            ->assertSee('Your senatorial zone is being assigned')
+            ->assertSee('Zone assignment pending')
+            ->assertDontSee('Nominate myself');
+
+        $this->actAsAmbassador($me)
+            ->get('/tmgamb/leaderboard')
+            ->assertOk()
+            ->assertSee('Your senatorial zone is being assigned');
+
+        $this->assertSame(0, Nomination::query()->forDistrict(null)->count());
+    }
+
+    private function actAsAmbassador($ambassador): static
+    {
+        return $this->actingAs($ambassador, 'ambassador');
+    }
+
     private function nominate($ambassador, array $zone, int $votes): Nomination
     {
         return Nomination::factory()->create([
