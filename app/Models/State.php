@@ -34,4 +34,20 @@ class State extends Model
     {
         return $this->hasManyThrough(Ward::class, Lga::class);
     }
+
+    /**
+     * @return HasMany<SenatorialDistrict, $this>
+     */
+    public function senatorialDistricts(): HasMany
+    {
+        return $this->hasMany(SenatorialDistrict::class);
+    }
+
+    /**
+     * @return HasMany<Ambassador, $this>
+     */
+    public function ambassadors(): HasMany
+    {
+        return $this->hasMany(Ambassador::class);
+    }
 }

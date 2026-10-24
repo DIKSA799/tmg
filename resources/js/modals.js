@@ -3,7 +3,7 @@ const FOCUSABLE = 'button:not([disabled]), input:not([disabled]), a[href], selec
 export function initModals() {
     const modals = Array.from(document.querySelectorAll('[data-modal]'));
     if (modals.length === 0) {
-        return;
+        return { open: () => {}, close: () => {} };
     }
 
     let active = null;
@@ -87,4 +87,6 @@ export function initModals() {
             first.focus();
         }
     });
+
+    return { open, close };
 }

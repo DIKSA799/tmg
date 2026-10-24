@@ -16,6 +16,7 @@ class Lga extends Model
 
     protected $fillable = [
         'state_id',
+        'senatorial_district_id',
         'name',
         'slug',
         'code',
@@ -27,6 +28,14 @@ class Lga extends Model
     public function state(): BelongsTo
     {
         return $this->belongsTo(State::class);
+    }
+
+    /**
+     * @return BelongsTo<SenatorialDistrict, $this>
+     */
+    public function senatorialDistrict(): BelongsTo
+    {
+        return $this->belongsTo(SenatorialDistrict::class);
     }
 
     /**

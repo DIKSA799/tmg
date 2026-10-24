@@ -1,6 +1,7 @@
 <?php
 
 use App\Models\Admin;
+use App\Models\Ambassador;
 use App\Models\User;
 
 return [
@@ -48,6 +49,16 @@ return [
             'driver' => 'session',
             'provider' => 'admins',
         ],
+
+        /*
+         * TMG Ambassadors Space. Phone/email identity, TMG number password.
+         * Kept separate from `web` so an ambassador can never reach the
+         * registration desk or the operations console.
+         */
+        'ambassador' => [
+            'driver' => 'session',
+            'provider' => 'ambassadors',
+        ],
     ],
 
     /*
@@ -76,6 +87,11 @@ return [
         'admins' => [
             'driver' => 'eloquent',
             'model' => Admin::class,
+        ],
+
+        'ambassadors' => [
+            'driver' => 'eloquent',
+            'model' => Ambassador::class,
         ],
     ],
 

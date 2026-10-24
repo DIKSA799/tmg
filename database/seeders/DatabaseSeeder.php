@@ -12,6 +12,8 @@ class DatabaseSeeder extends Seeder
             TmgUserSeeder::class,
             AdminSeeder::class,
             PollingUnitSeeder::class,
+            SenatorialDistrictSeeder::class,
+            SettingSeeder::class,
             SampleVoterRecordSeeder::class,
         ]);
     }

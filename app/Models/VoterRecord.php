@@ -6,6 +6,7 @@ use Database\Factories\VoterRecordFactory;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Support\Str;
 
 class VoterRecord extends Model
@@ -100,5 +101,13 @@ class VoterRecord extends Model
     public function pollingUnit(): BelongsTo
     {
         return $this->belongsTo(PollingUnit::class);
+    }
+
+    /**
+     * @return HasOne<Ambassador, $this>
+     */
+    public function ambassador(): HasOne
+    {
+        return $this->hasOne(Ambassador::class);
     }
 }

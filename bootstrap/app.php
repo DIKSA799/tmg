@@ -16,9 +16,17 @@ return Application::configure(basePath: dirname(__DIR__))
         // console path lazily inside each redirect closure.
         $consolePath = fn (): string => trim((string) config('admin.path'), '/') ?: 'admin';
 
-        $middleware->redirectGuestsTo(fn (Request $request) => $request->is($consolePath()) || $request->is($consolePath().'/*')
-            ? route('admin.login')
-            : route('login'));
+        $middleware->redirectGuestsTo(function (Request $request) use ($consolePath) {
+            if ($request->is($consolePath()) || $request->is($consolePath().'/*')) {
+                return route('admin.login');
+            }
+
+            if ($request->is('tmgamb') || $request->is('tmgamb/*')) {
+                return route('tmgamb.login');
+            }
+
+            return route('login');
+        });
 
         $middleware->redirectUsersTo(fn (Request $request) => $request->is($consolePath()) || $request->is($consolePath().'/*')
             ? route('admin.dashboard')

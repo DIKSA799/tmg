@@ -25,7 +25,7 @@ class AmbassadorWelcomeEmailTest extends TestCase
 
         $mailable = new AmbassadorWelcome($record);
 
-        $mailable->assertHasSubject(fn (string $subject): bool => str_contains($subject, 'TMG-DEL-NDW-UTO-033-K7Q2M9'));
+        $mailable->assertHasSubject('Welcome to TMG — your Ambassador reference is TMG-DEL-NDW-UTO-033-K7Q2M9');
         $mailable->assertSeeInHtml('TMG-DEL-NDW-UTO-033-K7Q2M9');
         $mailable->assertSeeInHtml('Amina Musa');
         $mailable->assertSeeInHtml('You are now a TMG Ambassador');

@@ -132,7 +132,7 @@ class ConsolePagesTest extends TestCase
         $response = $this->actingAs(Admin::factory()->create(), 'admin')
             ->get(route('admin.records.export'));
 
-        $response->assertOk()->assertHeader('content-type', 'text/csv');
+        $response->assertOk()->assertHeader('content-type', 'text/csv; charset=utf-8');
 
         $csv = $response->streamedContent();
 

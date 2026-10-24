@@ -10,7 +10,10 @@ use Throwable;
 
 class RecordVoterSubmission
 {
-    public function __construct(private readonly GenerateVoterReference $references) {}
+    public function __construct(
+        private readonly GenerateVoterReference $references,
+        private readonly EnsureAmbassadorAccount $ambassadors,
+    ) {}
 
     /**
      * Persist a volunteer record.
@@ -82,8 +85,27 @@ class RecordVoterSubmission
         }
 
         $this->queueWelcomeEmail($record);
+        $this->provisionAmbassador($record);
 
         return ['record' => $record, 'created' => true];
+    }
+
+    /**
+     * Every captured ambassador gets a login account whose password is their
+     * TMG number. A provisioning failure must never fail the registration:
+     * the backfill command can repair it later.
+     */
+    private function provisionAmbassador(VoterRecord $record): void
+    {
+        try {
+            $this->ambassadors->handle($record);
+        } catch (Throwable $exception) {
+            Log::error('Unable to provision the ambassador login.', [
+                'voter_record_id' => $record->id,
+                'reference' => $record->reference,
+                'exception' => $exception->getMessage(),
+            ]);
+        }
     }
 
     /**

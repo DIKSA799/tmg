@@ -12,6 +12,7 @@ export default defineConfig({
                 'resources/js/admin.js',
                 'resources/css/ambassadors.css',
                 'resources/js/ambassadors.js',
+                'resources/js/tmgamb.js',
             ],
             refresh: true,
             fonts: [

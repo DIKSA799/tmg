@@ -137,18 +137,16 @@ class Abbreviator
      */
     private function initials(array $tokens): string
     {
+        // Two words keep two letters of the first word so qualifiers survive:
+        // "Ndokwa West" -> NDW, "Albasu Central" -> ALC.
+        if (count($tokens) === 2) {
+            return substr($tokens[0], 0, 2).$tokens[1][0];
+        }
+
         $initials = '';
 
         foreach (array_slice($tokens, 0, 3) as $token) {
             $initials .= $token[0];
-        }
-
-        $first = $tokens[0];
-        $index = 1;
-
-        while (strlen($initials) < 3 && $index < strlen($first)) {
-            $initials .= $first[$index];
-            $index++;
         }
 
         return $initials;

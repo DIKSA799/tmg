@@ -40,6 +40,14 @@
             <p class="mt-4 inline-flex items-center gap-2 rounded-full border border-[color:var(--line)] px-4 py-2 font-mono text-xs text-[color:var(--ink-soft)]" data-success-reference-row>
                 Reference <span data-success-reference class="font-semibold text-[color:var(--ink)]">—</span>
             </p>
+            <p class="mx-auto mt-4 max-w-sm text-xs leading-relaxed text-[color:var(--ink-mute)]">
+                Your TMG number is your initial password in the Ambassadors Space. Sign in with your
+                phone number or email, then change it from your profile whenever you like.
+            </p>
+            <a href="{{ route('tmgamb.login') }}" class="mt-4 inline-flex items-center gap-2 text-sm font-semibold text-[color:var(--accent)]">
+                Open the Ambassadors Space
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M5 12h14m-6-6 6 6-6 6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+            </a>
             <div class="mt-7">
                 <button type="button" class="btn btn-primary" data-capture-again>Capture another Ambassador</button>
             </div>
