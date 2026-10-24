@@ -62,12 +62,7 @@
             </div>
         </section>
 
-        <section class="amb-stat-grid" aria-label="Zone statistics">
-            <div class="amb-stat">
-                <span class="amb-stat-label">Ambassadors</span>
-                <span class="amb-stat-value">{{ number_format($stats['ambassadors']) }}</span>
-                <span class="amb-stat-note">in {{ $district }}</span>
-            </div>
+        <section class="amb-stat-grid" aria-label="Leaderboard statistics">
             <div class="amb-stat">
                 <span class="amb-stat-label">Nominees</span>
                 <span class="amb-stat-value">{{ number_format($stats['nominations']) }}</span>
@@ -196,57 +191,67 @@
             </section>
         </div>
 
-        <section class="amb-card">
-            <div class="flex flex-wrap items-start justify-between gap-3">
+        @if ($zoneAssigned)
+            <section class="amb-card" id="find-ambassador">
                 <div>
-                    <h2 class="amb-card-title">Ambassadors in {{ $district }}</h2>
-                    <p class="amb-card-sub">{{ number_format($zoneAmbassadors->total()) }} people · search by name or phone number</p>
+                    <h2 class="amb-card-title">Find an ambassador</h2>
+                    <p class="amb-card-sub">
+                        Type the exact phone number they registered with to find a zone member and
+                        nominate them as a leader.
+                    </p>
                 </div>
 
-                <form method="GET" action="{{ route('tmgamb.dashboard') }}" class="amb-search w-full sm:w-72" role="search">
+                <form
+                    method="GET"
+                    action="{{ route('tmgamb.dashboard') }}#find-ambassador"
+                    class="amb-search mt-3 w-full sm:max-w-md"
+                    role="search"
+                >
                     <svg width="16" height="16" viewBox="0 0 24 24" fill="none" aria-hidden="true"><circle cx="11" cy="11" r="6.5" stroke="currentColor" stroke-width="1.7"/><path d="m16 16 4 4" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/></svg>
-                    <input type="search" name="q" value="{{ $search }}" placeholder="Name or phone number" aria-label="Search ambassadors in your zone">
-                    <button type="submit" class="btn btn-primary !px-3 !py-2 text-xs">Search</button>
+                    <input
+                        type="tel"
+                        name="phone"
+                        value="{{ $phone }}"
+                        placeholder="0803 123 4567"
+                        inputmode="tel"
+                        autocomplete="off"
+                        aria-label="Ambassador phone number"
+                    >
+                    <button type="submit" class="btn btn-primary !px-3 !py-2 text-xs">Find</button>
                 </form>
-            </div>
 
-            @if ($search !== '')
-                <p class="mt-3 text-xs text-[color:var(--ink-mute)]">
-                    Showing results for “{{ $search }}”. <a class="amb-link" href="{{ route('tmgamb.dashboard') }}">Clear</a>
-                </p>
-            @endif
-
-            <div class="mt-3">
-                @forelse ($zoneAmbassadors as $person)
-                    <div class="amb-row">
-                        <x-tmgamb.avatar :ambassador="$person" size="md" />
+                @if ($phoneError)
+                    <p class="field-error mt-2">{{ $phoneError }}</p>
+                @elseif ($foundAmbassador)
+                    <div class="amb-row mt-3">
+                        <x-tmgamb.avatar :ambassador="$foundAmbassador" size="md" />
 
                         <div class="amb-row-main">
                             <div class="amb-row-title">
-                                <span class="truncate">{{ $person->name }}</span>
+                                <span class="truncate">{{ $foundAmbassador->name }}</span>
 
-                                @if ($person->id === $ambassador->id)
+                                @if ($foundAmbassador->id === $ambassador->id)
                                     <span class="amb-badge">You</span>
                                 @endif
 
-                                @if ($person->nomination && $person->nomination->status === 'active')
-                                    <span class="amb-badge amb-badge-live">{{ number_format($person->nomination->votes_count) }} vote(s)</span>
+                                @if ($foundAmbassador->nomination && $foundAmbassador->nomination->status === 'active')
+                                    <span class="amb-badge amb-badge-live">{{ number_format($foundAmbassador->nomination->votes_count) }} vote(s)</span>
                                 @endif
                             </div>
                             <p class="amb-row-meta">
-                                {{ $person->lga?->name ?? '—' }} · {{ $person->ward?->name ?? '—' }} · {{ $person->pollingUnit?->name ?? '—' }}
+                                {{ $foundAmbassador->lga?->name ?? '—' }} · {{ $foundAmbassador->ward?->name ?? '—' }} · {{ $foundAmbassador->pollingUnit?->name ?? '—' }}
                             </p>
                         </div>
 
                         <div class="amb-row-actions">
-                            @if ($person->nomination)
-                                <a href="{{ route('tmgamb.nominee', $person->nomination->public_id) }}" class="btn btn-ghost !px-3 !py-2 text-xs">View</a>
-                            @elseif ($person->id !== $ambassador->id)
+                            @if ($foundAmbassador->nomination)
+                                <a href="{{ route('tmgamb.nominee', $foundAmbassador->nomination->public_id) }}" class="btn btn-ghost !px-3 !py-2 text-xs">View</a>
+                            @elseif ($foundAmbassador->id !== $ambassador->id)
                                 <form
                                     method="POST"
-                                    action="{{ route('tmgamb.invite', $person) }}"
-                                    data-confirm="Nominate {{ $person->name }} as a TMG leader in {{ $district }}? They will get an invitation to accept or decline."
-                                    data-confirm-title="Nominate {{ $person->name }}?"
+                                    action="{{ route('tmgamb.invite', $foundAmbassador) }}"
+                                    data-confirm="Nominate {{ $foundAmbassador->name }} as a TMG leader in {{ $district }}? They will get an invitation to accept or decline."
+                                    data-confirm-title="Nominate {{ $foundAmbassador->name }}?"
                                     data-confirm-label="Yes, nominate"
                                 >
                                     @csrf
@@ -255,21 +260,18 @@
                             @endif
                         </div>
                     </div>
-                @empty
-                    <div class="amb-empty">
-                        <svg width="28" height="28" viewBox="0 0 24 24" fill="none" aria-hidden="true"><circle cx="11" cy="11" r="6.5" stroke="currentColor" stroke-width="1.6"/><path d="m16 16 4 4" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg>
-                        <p class="text-sm font-semibold">No ambassadors found</p>
-                        <p class="text-xs">Try a different name or phone number.</p>
-                    </div>
-                @endforelse
-            </div>
+                @elseif ($phone !== '')
+                    <p class="mt-3 text-sm text-[color:var(--ink-mute)]">
+                        No ambassador in {{ $district }} matches that phone number.
+                    </p>
+                @endif
 
-            @if ($zoneAmbassadors->hasPages())
-                <div class="mt-4">
-                    {{ $zoneAmbassadors->onEachSide(1)->links() }}
-                </div>
-            @endif
-        </section>
+                <p class="mt-3 text-xs leading-relaxed text-[color:var(--ink-mute)]">
+                    For privacy, the full zone list is not shown. Only an exact registered phone
+                    number returns a match.
+                </p>
+            </section>
+        @endif
     </div>
 
     @if ($zoneAssigned && ! $nomination)

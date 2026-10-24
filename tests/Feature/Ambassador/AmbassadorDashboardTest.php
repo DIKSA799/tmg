@@ -12,7 +12,7 @@ class AmbassadorDashboardTest extends TestCase
 {
     use LazilyRefreshDatabase;
 
-    public function test_the_dashboard_only_lists_ambassadors_in_the_same_district(): void
+    public function test_the_dashboard_does_not_expose_the_zone_list(): void
     {
         $state = State::factory()->create();
         $zoneA = $this->makeZone($state);
@@ -25,31 +25,57 @@ class AmbassadorDashboardTest extends TestCase
         $this->actingAs($me, 'ambassador')
             ->get('/tmgamb/dashboard')
             ->assertOk()
-            ->assertSee($neighbour->name)
+            ->assertSee('Find an ambassador')
+            ->assertDontSee('search by name or phone number')
+            ->assertDontSee($neighbour->name)
             ->assertDontSee($outsider->name);
     }
 
-    public function test_the_zone_list_can_be_searched_by_name_and_phone(): void
+    public function test_an_ambassador_can_be_found_by_exact_phone_within_the_zone(): void
+    {
+        $state = State::factory()->create();
+        $zoneA = $this->makeZone($state);
+        $zoneB = $this->makeZone($state);
+
+        $me = $this->ambassadorInZone($zoneA, ['name' => 'Me Myself']);
+        $neighbour = $this->ambassadorInZone($zoneA, [
+            'name' => 'Neighbour Person',
+            'phone' => '+2348091111111',
+        ]);
+        $outsider = $this->ambassadorInZone($zoneB, [
+            'name' => 'Outsider Person',
+            'phone' => '+2348092222222',
+        ]);
+
+        $this->actingAs($me, 'ambassador')
+            ->get('/tmgamb/dashboard?phone='.urlencode('0809 111 1111'))
+            ->assertOk()
+            ->assertSee($neighbour->name)
+            ->assertDontSee($outsider->name);
+
+        $this->actingAs($me, 'ambassador')
+            ->get('/tmgamb/dashboard?phone='.urlencode('0809 222 2222'))
+            ->assertOk()
+            ->assertSee('No ambassador in')
+            ->assertDontSee($outsider->name);
+    }
+
+    public function test_the_phone_lookup_rejects_names_and_partial_numbers(): void
     {
         $zone = $this->makeZone();
         $me = $this->ambassadorInZone($zone, ['name' => 'Me Myself']);
-        $target = $this->ambassadorInZone($zone, [
-            'name' => 'Zainab Unique',
-            'phone' => '+2348099999999',
-        ]);
         $other = $this->ambassadorInZone($zone, ['name' => 'Other Person']);
 
         $this->actingAs($me, 'ambassador')
-            ->get('/tmgamb/dashboard?q=Zainab')
+            ->get('/tmgamb/dashboard?phone=Other')
             ->assertOk()
-            ->assertSee($target->name)
+            ->assertSee('Enter a valid Nigerian phone number.')
             ->assertDontSee($other->name);
 
         $this->actingAs($me, 'ambassador')
-            ->get('/tmgamb/dashboard?q='.urlencode('+2348099999999'))
+            ->get('/tmgamb/dashboard?phone=0803')
             ->assertOk()
-            ->assertSee($target->name)
-            ->assertDontSee($other->name);
+            ->assertSee('Enter a valid Nigerian phone number.');
     }
 
     public function test_terms_and_the_information_notice_appear_when_required(): void
@@ -169,10 +195,13 @@ class AmbassadorDashboardTest extends TestCase
     {
         $zone = $this->makeZone();
         $me = $this->ambassadorInZone($zone, ['name' => 'Me Myself']);
-        $this->ambassadorInZone($zone, ['name' => 'Other Person']);
+        $this->ambassadorInZone($zone, [
+            'name' => 'Other Person',
+            'phone' => '+2348093333333',
+        ]);
 
         $this->actingAs($me, 'ambassador')
-            ->get('/tmgamb/dashboard')
+            ->get('/tmgamb/dashboard?phone='.urlencode('0809 333 3333'))
             ->assertOk()
             ->assertSee('id="confirm-modal"', false)
             ->assertSee('data-confirm-label="Yes, nominate"', false)
