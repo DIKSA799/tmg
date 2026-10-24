@@ -121,6 +121,30 @@ class AmbassadorProvisioningTest extends TestCase
         $this->assertSame($original, $ambassador->fresh()->password);
     }
 
+    public function test_the_backfill_can_run_in_shards(): void
+    {
+        $zone = $this->makeZone();
+
+        $records = collect(range(1, 4))->map(fn () => VoterRecord::factory()->create([
+            'state_id' => $zone['state']->id,
+            'lga_id' => $zone['lga']->id,
+            'ward_id' => $zone['ward']->id,
+            'polling_unit_id' => $zone['unit']->id,
+        ]));
+
+        $this->artisan('tmg:backfill-ambassadors', [
+            '--shard' => '1/2',
+            '--rounds' => 4,
+            '--no-progress' => true,
+        ])->assertSuccessful();
+
+        $this->assertSame(2, Ambassador::query()->count());
+        $this->assertSame(
+            $records->pluck('id')->filter(fn (int $id): bool => $id % 2 === 1)->sort()->values()->all(),
+            Ambassador::query()->pluck('voter_record_id')->sort()->values()->all(),
+        );
+    }
+
     public function test_an_email_already_used_by_another_account_is_dropped(): void
     {
         $zone = $this->makeZone();

@@ -2,6 +2,9 @@
 
 namespace App\Http\Requests;
 
+use App\Actions\EnsureAmbassadorAccount;
+use App\Models\Ambassador;
+use App\Models\VoterRecord;
 use App\Support\AmbassadorIdentity;
 use App\Support\AmbassadorPassword;
 use Illuminate\Auth\Events\Lockout;
@@ -37,7 +40,7 @@ class AmbassadorLoginRequest extends FormRequest
     {
         return [
             'identity.required' => 'Enter your phone number or email address.',
-            'password.required' => 'Enter your TMG number as the password.',
+            'password.required' => 'Enter your password.',
         ];
     }
 
@@ -53,11 +56,19 @@ class AmbassadorLoginRequest extends FormRequest
         // Passwords are case-insensitive: the same normalisation is applied
         // when an account is created, changed, or reset.
         $password = AmbassadorPassword::normalize($this->string('password')->toString());
+        $remember = $this->boolean('remember');
 
         $authenticated = Auth::guard('ambassador')->attempt([
             $field => $identity,
             'password' => $password,
-        ], $this->boolean('remember'));
+        ], $remember);
+
+        // A record captured before the bulk backfill has no account yet. Let
+        // it sign in with its TMG number and provision the account on the fly,
+        // so nobody has to wait for a 50k-record backfill.
+        if (! $authenticated) {
+            $authenticated = $this->attemptFirstLogin($field, $identity, $password, $remember);
+        }
 
         if (! $authenticated) {
             RateLimiter::hit($this->throttleKey(), (int) config('ambassadors.login.decay_seconds', 60));
@@ -74,6 +85,42 @@ class AmbassadorLoginRequest extends FormRequest
         if ($ambassador !== null) {
             $ambassador->forceFill(['last_login_at' => now()])->saveQuietly();
         }
+    }
+
+    /**
+     * Sign in a voter record that has no ambassador account yet.
+     *
+     * The TMG number is accepted only when no account exists for the record.
+     * Once an account exists its own password is authoritative, so a changed
+     * password can never be bypassed by re-using the TMG number.
+     */
+    private function attemptFirstLogin(string $field, string $identity, string $password, bool $remember): bool
+    {
+        $record = $field === 'email'
+            ? VoterRecord::query()->whereRaw('LOWER(email) = ?', [$identity])->first()
+            : VoterRecord::query()->where('phone', $identity)->first();
+
+        if ($record === null || $record->reference === null || $record->reference === '') {
+            return false;
+        }
+
+        if (Ambassador::query()->where('voter_record_id', $record->id)->exists()) {
+            return false;
+        }
+
+        if (! hash_equals(AmbassadorPassword::normalize($record->reference), $password)) {
+            return false;
+        }
+
+        $ambassador = app(EnsureAmbassadorAccount::class)->handle($record);
+
+        if ($ambassador === null) {
+            return false;
+        }
+
+        Auth::guard('ambassador')->login($ambassador, $remember);
+
+        return true;
     }
 
     /**

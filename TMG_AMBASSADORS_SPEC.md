@@ -65,8 +65,32 @@ Each ambassador row stores:
 
 - Creates a missing ambassador for every existing `voter_record`.
 - Hashes the record's `reference` as the password.
-- Resolves the senatorial district from the LGA.
+- Resolves the senatorial district from one preloaded LGA map per run.
 - Safe to re-run; never overwrites an existing account or password.
+
+**Nobody has to wait for a big backfill.** Sign-in also provisions lazily: when a
+voter record has no ambassador account yet, the correct TMG number signs them in
+and the account is created on that first login. Once an account exists, its own
+password is authoritative — the TMG number can never bypass a changed password.
+That means 50k+ records can go live immediately while the bulk backfill runs in
+the background for reporting and admin counts.
+
+For large imports, run the backfill in parallel shards:
+
+```bash
+for i in $(seq 1 8); do
+  php artisan tmg:backfill-ambassadors --shard=$i/8 --rounds=10 --no-progress \
+    > storage/logs/backfill-$i.log 2>&1 &
+done
+wait
+```
+
+Bcrypt is the bottleneck (~250ms per record at cost 12). Eight shards and
+`--rounds=10` turn ~3.5 hours of single-threaded work for 50k records into a few
+minutes, depending on CPU cores. Omit `--rounds` to keep the configured cost
+(12); 10 is a reasonable speed/security balance for this credential, and hashes
+created at any cost still verify normally. The command is shard-safe and
+idempotent, so a re-run resumes where it left off.
 
 New registrations create the account automatically inside `RecordVoterSubmission`
 (failures are logged, never block the registration).
@@ -286,14 +310,15 @@ login and returned to the nominee page.
 php artisan migrate
 php artisan db:seed --class=SenatorialDistrictSeeder
 php artisan db:seed --class=SettingSeeder
-php artisan tmg:backfill-ambassadors     # creates logins for existing records
+php artisan tmg:backfill-ambassadors     # optional: first login also provisions lazily
 php artisan storage:link                 # profile photos
 npm run build
 ```
 
 The backfill is idempotent and hashes each voter record's TMG number as that
 ambassador's password. Re-run it safely after importing new records. New
-registrations are provisioned automatically.
+registrations are provisioned automatically. For 50k+ records, shard the
+backfill (see 2.3) instead of waiting for one process.
 
 Admin console (`config('admin.path')`, default `/ops-7f3a9c2e`):
 

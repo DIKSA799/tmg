@@ -2,8 +2,11 @@
 
 namespace Tests\Feature\Ambassador;
 
+use App\Models\Ambassador;
 use App\Models\User;
+use App\Models\VoterRecord;
 use Illuminate\Foundation\Testing\LazilyRefreshDatabase;
+use Illuminate\Support\Facades\Hash;
 use Tests\TestCase;
 
 class AmbassadorLoginTest extends TestCase
@@ -99,6 +102,98 @@ class AmbassadorLoginTest extends TestCase
             ->post('/tmgamb/logout')
             ->assertRedirect(route('tmgamb.login'));
 
+        $this->assertGuest('ambassador');
+    }
+
+    public function test_a_record_without_an_account_can_sign_in_and_is_provisioned(): void
+    {
+        $zone = $this->makeZone();
+        $record = VoterRecord::factory()->create([
+            'reference' => 'TMG-LAZY-001-ABC-XYZ123',
+            'phone' => '+2348037777777',
+            'email' => 'lazy@example.com',
+            'state_id' => $zone['state']->id,
+            'lga_id' => $zone['lga']->id,
+            'ward_id' => $zone['ward']->id,
+            'polling_unit_id' => $zone['unit']->id,
+        ]);
+
+        $this->assertDatabaseCount('ambassadors', 0);
+
+        $this->post('/tmgamb', [
+            'identity' => '0803 777 7777',
+            'password' => strtolower('TMG-LAZY-001-ABC-XYZ123'),
+        ])->assertRedirect(route('tmgamb.dashboard'));
+
+        $this->assertAuthenticated('ambassador');
+
+        $ambassador = Ambassador::query()->sole();
+
+        $this->assertSame($record->id, $ambassador->voter_record_id);
+        $this->assertSame($zone['district']->id, $ambassador->senatorial_district_id);
+        $this->assertTrue(Hash::check('TMG-LAZY-001-ABC-XYZ123', $ambassador->password));
+    }
+
+    public function test_a_record_without_an_account_can_sign_in_with_a_mixed_case_email(): void
+    {
+        $zone = $this->makeZone();
+        $record = VoterRecord::factory()->create([
+            'reference' => 'TMG-LAZY-002-DEF-ABC456',
+            'email' => 'Lazy@Example.com',
+            'state_id' => $zone['state']->id,
+            'lga_id' => $zone['lga']->id,
+            'ward_id' => $zone['ward']->id,
+            'polling_unit_id' => $zone['unit']->id,
+        ]);
+
+        $this->post('/tmgamb', [
+            'identity' => 'LAZY@EXAMPLE.COM',
+            'password' => 'tmg-lazy-002-def-abc456',
+        ])->assertRedirect(route('tmgamb.dashboard'));
+
+        $this->assertAuthenticated('ambassador');
+        $this->assertDatabaseHas('ambassadors', ['voter_record_id' => $record->id]);
+    }
+
+    public function test_the_tmg_number_cannot_bypass_a_changed_password(): void
+    {
+        $zone = $this->makeZone();
+        $ambassador = $this->ambassadorInZone($zone);
+        $reference = $ambassador->voterRecord->reference;
+
+        $ambassador->forceFill(['password' => 'CHANGED PASSWORD'])->save();
+
+        $this->from('/tmgamb')
+            ->post('/tmgamb', [
+                'identity' => $ambassador->phone,
+                'password' => $reference,
+            ])
+            ->assertRedirect('/tmgamb')
+            ->assertSessionHasErrors('identity');
+
+        $this->assertGuest('ambassador');
+    }
+
+    public function test_a_wrong_tmg_number_does_not_provision_an_account(): void
+    {
+        $zone = $this->makeZone();
+        $record = VoterRecord::factory()->create([
+            'reference' => 'TMG-LAZY-003-GHI-XYZ789',
+            'state_id' => $zone['state']->id,
+            'lga_id' => $zone['lga']->id,
+            'ward_id' => $zone['ward']->id,
+            'polling_unit_id' => $zone['unit']->id,
+        ]);
+
+        $this->from('/tmgamb')
+            ->post('/tmgamb', [
+                'identity' => $record->phone,
+                'password' => 'TMG-NOT-THE-NUMBER',
+            ])
+            ->assertRedirect('/tmgamb')
+            ->assertSessionHasErrors('identity');
+
+        $this->assertDatabaseCount('ambassadors', 0);
         $this->assertGuest('ambassador');
     }
 
