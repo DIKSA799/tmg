@@ -65,6 +65,7 @@
             @include('tmgamb.partials.bottom-nav')
             @include('tmgamb.partials.terms')
             @include('tmgamb.partials.notice')
+            @include('tmgamb.partials.confirm')
         @endif
     </body>
 </html>

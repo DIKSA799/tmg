@@ -242,9 +242,15 @@
                             @if ($person->nomination)
                                 <a href="{{ route('tmgamb.nominee', $person->nomination->public_id) }}" class="btn btn-ghost !px-3 !py-2 text-xs">View</a>
                             @elseif ($person->id !== $ambassador->id)
-                                <form method="POST" action="{{ route('tmgamb.invite', $person) }}" data-confirm="Invite {{ $person->name }} to be nominated in {{ $district }}?">
+                                <form
+                                    method="POST"
+                                    action="{{ route('tmgamb.invite', $person) }}"
+                                    data-confirm="Nominate {{ $person->name }} as a TMG leader in {{ $district }}? They will get an invitation to accept or decline."
+                                    data-confirm-title="Nominate {{ $person->name }}?"
+                                    data-confirm-label="Yes, nominate"
+                                >
                                     @csrf
-                                    <button type="submit" class="btn btn-ghost !px-3 !py-2 text-xs">Invite</button>
+                                    <button type="submit" class="btn btn-ghost !px-3 !py-2 text-xs">Nominate as leader</button>
                                 </form>
                             @endif
                         </div>

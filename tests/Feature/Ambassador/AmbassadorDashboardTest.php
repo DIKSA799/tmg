@@ -165,6 +165,20 @@ class AmbassadorDashboardTest extends TestCase
         $this->assertSame(0, Nomination::query()->forDistrict(null)->count());
     }
 
+    public function test_the_nominate_action_uses_a_styled_confirmation_modal(): void
+    {
+        $zone = $this->makeZone();
+        $me = $this->ambassadorInZone($zone, ['name' => 'Me Myself']);
+        $this->ambassadorInZone($zone, ['name' => 'Other Person']);
+
+        $this->actingAs($me, 'ambassador')
+            ->get('/tmgamb/dashboard')
+            ->assertOk()
+            ->assertSee('id="confirm-modal"', false)
+            ->assertSee('data-confirm-label="Yes, nominate"', false)
+            ->assertSee('Nominate as leader');
+    }
+
     private function actAsAmbassador($ambassador): static
     {
         return $this->actingAs($ambassador, 'ambassador');

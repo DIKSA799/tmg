@@ -131,13 +131,59 @@ function initNativeShare() {
     });
 }
 
-function initConfirmations() {
+function initConfirmations(modals) {
+    const modal = document.getElementById('confirm-modal');
+
+    if (modal === null) {
+        return;
+    }
+
+    const title = modal.querySelector('[data-confirm-title]');
+    const message = modal.querySelector('[data-confirm-message]');
+    const confirmButton = modal.querySelector('[data-confirm-submit]');
+
+    let pendingForm = null;
+
     document.querySelectorAll('form[data-confirm]').forEach((form) => {
         form.addEventListener('submit', (event) => {
-            if (!window.confirm(form.dataset.confirm)) {
-                event.preventDefault();
+            // The confirm button re-submits the form with this flag set.
+            if (form.dataset.confirmed === '1') {
+                delete form.dataset.confirmed;
+
+                return;
             }
+
+            event.preventDefault();
+
+            pendingForm = form;
+
+            if (title) {
+                title.textContent = form.dataset.confirmTitle ?? 'Please confirm';
+            }
+
+            if (message) {
+                message.textContent = form.dataset.confirm ?? '';
+            }
+
+            if (confirmButton) {
+                confirmButton.textContent = form.dataset.confirmLabel ?? 'Confirm';
+            }
+
+            modals.open('confirm-modal');
         });
+    });
+
+    confirmButton?.addEventListener('click', () => {
+        if (pendingForm === null) {
+            return;
+        }
+
+        const form = pendingForm;
+        pendingForm = null;
+        form.dataset.confirmed = '1';
+
+        modals.close();
+        form.requestSubmit();
     });
 }
 
@@ -185,7 +231,7 @@ function boot() {
     initRevealSecrets();
     initCopyable();
     initNativeShare();
-    initConfirmations();
+    initConfirmations(modals);
     initPhotoPreviews();
 }
 

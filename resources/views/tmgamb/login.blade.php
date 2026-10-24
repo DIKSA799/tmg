@@ -33,7 +33,7 @@
                         </li>
                         <li>
                             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="m5 13 4 4L19 7" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg>
-                            Invite ambassadors from your zone and share your nomination.
+                            Nominate other ambassadors for zone leadership and share your nomination.
                         </li>
                     </ul>
                 </div>
