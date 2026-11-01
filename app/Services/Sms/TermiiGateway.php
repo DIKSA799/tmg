@@ -2,23 +2,27 @@
 
 namespace App\Services\Sms;
 
+use App\Services\Sms\Concerns\ReadsHttpResponses;
+use App\Services\Sms\Contracts\SmsGateway;
 use Illuminate\Http\Client\Response;
 use Illuminate\Support\Facades\Http;
 use Throwable;
 
-class TermiiClient
+class TermiiGateway implements SmsGateway
 {
+    use ReadsHttpResponses;
+
     /**
      * Send one message through Termii's single-recipient endpoint and return the
      * full exchange. One request per number keeps the recorded request/response
      * unambiguous for the console.
      */
-    public function send(string $phone, string $message): SmsResult
+    public function send(string $phone, string $message, string $senderId): SmsResult
     {
         $payload = [
             'api_key' => (string) config('services.termii.key'),
             'to' => ltrim($phone, '+'),
-            'from' => (string) config('services.termii.sender_id'),
+            'from' => $senderId,
             'sms' => $message,
             'type' => (string) config('services.termii.type', 'plain'),
             'channel' => (string) config('services.termii.channel', 'generic'),
@@ -69,12 +73,11 @@ class TermiiClient
         }
 
         $messageId = $body['message_id'] ?? $body['message_id_str'] ?? null;
-        $providerStatus = $body['message'] ?? null;
 
         return new SmsResult(
             ok: $ok,
-            providerMessageId: $messageId === null ? null : (string) $messageId,
-            providerStatus: $providerStatus === null ? null : (string) $providerStatus,
+            providerMessageId: $this->stringOrNull($messageId),
+            providerStatus: $this->stringOrNull($body['message'] ?? null),
             error: $ok ? null : $this->errorFrom($response),
             requestUrl: $url,
             requestHeaders: $headers,
@@ -83,16 +86,5 @@ class TermiiClient
             responseHeaders: $response->headers(),
             responseBody: $response->body(),
         );
-    }
-
-    private function errorFrom(Response $response): string
-    {
-        $body = $response->body();
-
-        if (trim($body) !== '') {
-            return $body;
-        }
-
-        return 'Termii returned HTTP '.$response->status().' with an empty body.';
     }
 }

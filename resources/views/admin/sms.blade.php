@@ -1,7 +1,7 @@
-<x-layouts.admin title="SMS" subtitle="Broadcast to a state or LGA, or to a manual list of numbers, via Termii">
+<x-layouts.admin title="SMS" subtitle="Broadcast to a state or LGA, or to a manual list of numbers, via Termii or Sendchamp">
     <x-slot:actions>
-        <span class="admin-pill">Sender: {{ $senderId !== '' ? $senderId : 'not set' }}</span>
         <span class="admin-pill">{{ number_format($campaigns->total()) }} campaigns</span>
+        <span class="admin-pill">{{ collect($providers)->where('configured', true)->count() }} of {{ count($providers) }} providers ready</span>
     </x-slot:actions>
 
     @if ($errors->any())
@@ -10,17 +10,32 @@
         </div>
     @endif
 
-    @unless ($configured)
+    @unless ($anyConfigured)
         <div class="rounded-2xl border border-[color:var(--flag-red)]/40 bg-[color:var(--flag-red)]/5 p-4 text-sm font-medium text-[color:var(--flag-red)]" role="alert">
-            Termii is not configured. Set <code>TERMII_API_KEY</code> and <code>TERMII_SENDER_ID</code> in the environment before sending.
+            No SMS provider is configured. Set the API key and sender id for Termii and/or Sendchamp in the environment before sending.
         </div>
     @endunless
 
     <section class="admin-card" data-sms-compose>
         <h2 class="admin-card-title">Compose a broadcast</h2>
-        <p class="admin-card-sub">Pick who receives the message, type it once, and watch delivery live. Every send is stored with its request and response for troubleshooting.</p>
+        <p class="admin-card-sub">Pick a provider, choose who receives the message, type it once, and watch delivery live. Every send is stored with its request and response for troubleshooting.</p>
 
-        <div class="admin-range" role="group" aria-label="Recipients">
+        <div class="mt-4" style="max-width: 24rem;">
+            <label class="field-label" for="sms-provider">Provider</label>
+            <select id="sms-provider" class="admin-input" data-sms-provider>
+                @foreach ($providers as $provider)
+                    <option value="{{ $provider['value'] }}" @selected($provider['value'] === $defaultProvider)>
+                        {{ $provider['label'] }}{{ $provider['configured'] ? '' : ' (not configured)' }}
+                    </option>
+                @endforeach
+            </select>
+            <p class="field-hint">
+                Sending as <strong data-sms-sender>{{ collect($providers)->firstWhere('value', $defaultProvider)['senderId'] ?? '—' }}</strong>
+                <span data-sms-provider-warning class="text-[color:var(--flag-red)]" hidden>— this provider is not configured.</span>
+            </p>
+        </div>
+
+        <div class="admin-range mt-4" role="group" aria-label="Recipients">
             <button type="button" data-sms-mode="location" class="is-active">By location</button>
             <button type="button" data-sms-mode="manual">Manual numbers</button>
         </div>
@@ -45,7 +60,13 @@
                 </div>
             </div>
 
-            <p class="text-sm">Recipients: <span class="num font-semibold" data-sms-count>0</span> record(s)</p>
+            <div>
+                <label class="field-label" for="sms-test-numbers">Also send to these numbers <span class="text-[color:var(--ink-mute)]">(optional test recipients)</span></label>
+                <textarea id="sms-test-numbers" class="admin-input" data-sms-test-numbers rows="3" placeholder="08127234628&#10;+2348031234567"></textarea>
+                <p class="field-hint">Added on top of the location so you can confirm delivery. One per line or comma separated.</p>
+            </div>
+
+            <p class="text-sm">Recipients: <span class="num font-semibold" data-sms-count>0</span> record(s) + <span class="num font-semibold" data-sms-test-count>0</span> test number(s)</p>
         </div>
 
         <div class="mt-4 grid gap-4" data-sms-panel="manual" hidden>
@@ -62,12 +83,12 @@
             <label class="field-label" for="sms-message">Message</label>
             <textarea id="sms-message" class="admin-input" data-sms-message rows="5" maxlength="1000"></textarea>
             <p class="field-hint">
-                <span data-sms-chars>0</span> characters &middot; <span data-sms-segments>1</span> SMS &middot; from <strong>{{ $senderId !== '' ? $senderId : '—' }}</strong>
+                <span data-sms-chars>0</span> characters &middot; <span data-sms-segments>1</span> SMS
             </p>
         </div>
 
         <div class="mt-4 flex flex-wrap items-center gap-3">
-            <button type="button" class="btn btn-primary" data-sms-send @disabled(! $configured)>Send SMS</button>
+            <button type="button" class="btn btn-primary" data-sms-send @disabled(! $anyConfigured)>Send SMS</button>
             <span class="text-sm text-[color:var(--ink-mute)]" data-sms-status></span>
         </div>
 
@@ -90,6 +111,7 @@
             <table class="admin-table">
                 <thead>
                     <tr>
+                        <th scope="col">Provider</th>
                         <th scope="col">Target</th>
                         <th scope="col">Recipients</th>
                         <th scope="col">Sent</th>
@@ -103,6 +125,7 @@
                 <tbody>
                     @forelse ($campaigns as $campaign)
                         <tr>
+                            <td>{{ $campaign->provider->label() }}</td>
                             <td>{{ $campaign->scope_label }}</td>
                             <td class="num">{{ number_format($campaign->total_recipients) }}</td>
                             <td class="num">{{ number_format($campaign->sent_count) }}</td>
@@ -114,7 +137,7 @@
                         </tr>
                     @empty
                         <tr>
-                            <td colspan="8" class="py-10 text-center text-[color:var(--ink-mute)]">No campaigns yet.</td>
+                            <td colspan="9" class="py-10 text-center text-[color:var(--ink-mute)]">No campaigns yet.</td>
                         </tr>
                     @endforelse
                 </tbody>
@@ -137,6 +160,7 @@
             storeUrl: {{ Js::from(route('admin.sms.store')) }},
             processUrl: {{ Js::from(route('admin.sms.process', ['campaign' => '__ID__'])) }},
             detailUrl: {{ Js::from(route('admin.sms.show', ['campaign' => '__ID__'])) }},
+            providers: {{ Js::from($providers) }},
         };
     </script>
 </x-layouts.admin>

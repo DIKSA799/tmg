@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Enums\SmsProvider;
 use Database\Factories\SmsCampaignFactory;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
@@ -20,6 +21,7 @@ class SmsCampaign extends Model
     public const STATUS_PARTIAL = 'partial';
 
     protected $fillable = [
+        'provider',
         'admin_id',
         'state_id',
         'lga_id',
@@ -36,6 +38,7 @@ class SmsCampaign extends Model
     protected function casts(): array
     {
         return [
+            'provider' => SmsProvider::class,
             'total_recipients' => 'integer',
             'sent_count' => 'integer',
             'failed_count' => 'integer',

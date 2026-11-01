@@ -12,6 +12,13 @@ function numberFrom(element) {
     return Number(String(element?.textContent ?? '').replace(/[^0-9]/g, '')) || 0;
 }
 
+// Toggle visibility with both the attribute and inline display, so a Tailwind
+// display utility (grid/flex) on the element can never keep it visible.
+function setPanel(element, visible) {
+    element.hidden = ! visible;
+    element.style.display = visible ? '' : 'none';
+}
+
 // Mirrors App\Support\PhoneNumber::normalize so the live count matches what the
 // server will accept. Returns bare national digits, or null when invalid.
 function normaliseNumber(value) {
@@ -118,11 +125,16 @@ function initCompose(config) {
         return;
     }
 
+    const providerSelect = root.querySelector('[data-sms-provider]');
+    const senderHint = root.querySelector('[data-sms-sender]');
+    const providerWarning = root.querySelector('[data-sms-provider-warning]');
     const stateSelect = root.querySelector('[data-sms-state]');
     const lgaSelect = root.querySelector('[data-sms-lga]');
     const count = root.querySelector('[data-sms-count]');
     const numbersInput = root.querySelector('[data-sms-numbers]');
     const numberCount = root.querySelector('[data-sms-number-count]');
+    const testNumbersInput = root.querySelector('[data-sms-test-numbers]');
+    const testCount = root.querySelector('[data-sms-test-count]');
     const message = root.querySelector('[data-sms-message]');
     const chars = root.querySelector('[data-sms-chars]');
     const segments = root.querySelector('[data-sms-segments]');
@@ -149,8 +161,17 @@ function initCompose(config) {
     const setMode = (next) => {
         mode = next;
         modeButtons.forEach((button) => button.classList.toggle('is-active', button.dataset.smsMode === next));
-        panels.location.hidden = next !== 'location';
-        panels.manual.hidden = next !== 'manual';
+        setPanel(panels.location, next === 'location');
+        setPanel(panels.manual, next === 'manual');
+    };
+
+    const providerInfo = () => (config.providers ?? []).find((provider) => provider.value === providerSelect.value) ?? null;
+
+    const refreshProvider = () => {
+        const info = providerInfo();
+        senderHint.textContent = info?.senderId ?? '—';
+        setPanel(providerWarning, ! (info?.configured ?? false));
+        sendButton.disabled = ! (info?.configured ?? false);
     };
 
     const loadLgas = async () => {
@@ -204,6 +225,10 @@ function initCompose(config) {
         numberCount.textContent = format(parseNumbers(numbersInput.value).length);
     };
 
+    const refreshTestCount = () => {
+        testCount.textContent = format(parseNumbers(testNumbersInput.value).length);
+    };
+
     const refreshMessage = () => {
         const length = message.value.length;
         chars.textContent = format(length);
@@ -216,11 +241,13 @@ function initCompose(config) {
     });
     lgaSelect.addEventListener('change', refreshCount);
     numbersInput.addEventListener('input', refreshManualCount);
+    testNumbersInput.addEventListener('input', refreshTestCount);
     message.addEventListener('input', refreshMessage);
     modeButtons.forEach((button) => button.addEventListener('click', () => setMode(button.dataset.smsMode)));
+    providerSelect.addEventListener('change', refreshProvider);
 
     sendButton.addEventListener('click', async () => {
-        const body = { mode, message: message.value };
+        const body = { provider: providerSelect.value, mode, message: message.value };
 
         if (mode === 'location') {
             if (! stateSelect.value) {
@@ -234,6 +261,10 @@ function initCompose(config) {
             if (lgaSelect.value) {
                 body.lga_id = Number(lgaSelect.value);
             }
+
+            if (parseNumbers(testNumbersInput.value).length > 0) {
+                body.test_numbers = testNumbersInput.value;
+            }
         } else {
             if (parseNumbers(numbersInput.value).length === 0) {
                 status.textContent = 'Add at least one valid phone number.';
@@ -245,8 +276,8 @@ function initCompose(config) {
         }
 
         sendButton.disabled = true;
-        progressBox.hidden = false;
-        detail.hidden = true;
+        setPanel(progressBox, true);
+        setPanel(detail, false);
         status.textContent = 'Creating campaign…';
         paintProgress(ui, { sent: 0, failed: 0, remaining: 0, total: 0 });
 
@@ -264,16 +295,18 @@ function initCompose(config) {
 
             status.textContent = 'Done.';
             detail.href = config.detailUrl.replace('__ID__', created.campaign_id);
-            detail.hidden = false;
+            setPanel(detail, true);
         } catch (error) {
             status.textContent = error.message;
         } finally {
-            sendButton.disabled = false;
+            refreshProvider();
         }
     });
 
     setMode('location');
     refreshMessage();
+    refreshProvider();
+    refreshTestCount();
 }
 
 function initResume(config) {

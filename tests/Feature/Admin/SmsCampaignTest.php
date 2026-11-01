@@ -2,6 +2,7 @@
 
 namespace Tests\Feature\Admin;
 
+use App\Enums\SmsProvider;
 use App\Models\Admin;
 use App\Models\Lga;
 use App\Models\SmsCampaign;
@@ -29,6 +30,17 @@ class SmsCampaignTest extends TestCase
             'services.termii.key' => 'test-api-key',
             'services.termii.sender_id' => 'TMG',
             'services.termii.base_url' => 'https://api.ng.termii.com',
+        ]);
+    }
+
+    private function configureSendchamp(): void
+    {
+        config([
+            'services.sendchamp.enabled' => true,
+            'services.sendchamp.key' => 'test-sendchamp-key',
+            'services.sendchamp.sender_id' => 'Sendchamp',
+            'services.sendchamp.base_url' => 'https://api.sendchamp.com/api/v1',
+            'services.sendchamp.route' => 'non_dnd',
         ]);
     }
 
@@ -69,6 +81,7 @@ class SmsCampaignTest extends TestCase
 
         $this->operator()
             ->postJson(route('admin.sms.store'), [
+                'provider' => 'termii',
                 'mode' => 'location',
                 'state_id' => $state->id,
                 'lga_id' => $lga->id,
@@ -86,12 +99,41 @@ class SmsCampaignTest extends TestCase
         $this->assertDatabaseCount('sms_messages', 3);
     }
 
+    public function test_a_location_broadcast_includes_the_optional_test_numbers(): void
+    {
+        $this->configureTermii();
+
+        $state = State::factory()->create(['name' => 'Lagos']);
+        $lga = Lga::factory()->for($state)->create();
+        VoterRecord::factory()->create(['state_id' => $state->id, 'lga_id' => $lga->id, 'phone' => '+2348031111111']);
+        VoterRecord::factory()->create(['state_id' => $state->id, 'lga_id' => $lga->id, 'phone' => '+2348032222222']);
+
+        $this->operator()
+            ->postJson(route('admin.sms.store'), [
+                'provider' => 'termii',
+                'mode' => 'location',
+                'state_id' => $state->id,
+                'message' => 'Hello Lagos',
+                'test_numbers' => "08127234628\n+2348031111111",
+            ])
+            ->assertOk()
+            ->assertJsonPath('total', 3);
+
+        $campaign = SmsCampaign::query()->sole();
+
+        $this->assertSame(3, $campaign->total_recipients);
+        $this->assertDatabaseCount('sms_messages', 3);
+        $this->assertDatabaseHas('sms_messages', ['phone' => '+2348127234628', 'voter_record_id' => null]);
+        $this->assertSame(1, $campaign->messages()->where('phone', '+2348031111111')->count());
+    }
+
     public function test_a_manual_broadcast_normalises_and_deduplicates_numbers(): void
     {
         $this->configureTermii();
 
         $this->operator()
             ->postJson(route('admin.sms.store'), [
+                'provider' => 'termii',
                 'mode' => 'manual',
                 'manual_numbers' => "08031234567\n08059876543\n+2348031234567\nnot-a-number",
                 'message' => 'Test message',
@@ -115,6 +157,7 @@ class SmsCampaignTest extends TestCase
 
         $this->operator()
             ->postJson(route('admin.sms.store'), [
+                'provider' => 'termii',
                 'mode' => 'manual',
                 'manual_numbers' => 'hello world',
                 'message' => 'Test message',
@@ -125,18 +168,19 @@ class SmsCampaignTest extends TestCase
         $this->assertDatabaseCount('sms_campaigns', 0);
     }
 
-    public function test_a_broadcast_is_rejected_when_termii_is_not_configured(): void
+    public function test_a_broadcast_is_rejected_when_the_selected_provider_is_not_configured(): void
     {
-        config(['services.termii.key' => null]);
+        config(['services.termii.key' => null, 'services.sendchamp.key' => null]);
 
         $this->operator()
             ->postJson(route('admin.sms.store'), [
+                'provider' => 'termii',
                 'mode' => 'manual',
                 'manual_numbers' => '08031234567',
                 'message' => 'Test message',
             ])
             ->assertStatus(422)
-            ->assertJsonValidationErrors('termii');
+            ->assertJsonValidationErrors('provider');
 
         $this->assertDatabaseCount('sms_campaigns', 0);
     }
@@ -183,6 +227,111 @@ class SmsCampaignTest extends TestCase
 
         $responseHeaderNames = array_map('strtolower', array_keys($message->response_headers));
         $this->assertContains('x-termii-test', $responseHeaderNames);
+    }
+
+    public function test_a_sendchamp_broadcast_sends_through_sendchamp(): void
+    {
+        $this->configureSendchamp();
+        Http::preventStrayRequests();
+        Http::fake([
+            'api.sendchamp.com/*' => Http::response([
+                'status' => 'success',
+                'code' => 200,
+                'message' => 'processing',
+                'data' => [
+                    'id' => 'MN-SMS-ad51fcd1-8257-4fc5-b6df-11cf2ddcdfac',
+                    'reference' => 'MN-SMS-ad51fcd1-8257-4fc5-b6df-11cf2ddcdfac',
+                    'status' => 'processing',
+                ],
+            ], 200, ['Content-Type' => 'application/json']),
+        ]);
+
+        $campaign = SmsCampaign::factory()->create([
+            'provider' => SmsProvider::Sendchamp->value,
+            'sender_id' => 'Sendchamp',
+            'message' => 'Hello',
+            'total_recipients' => 1,
+        ]);
+        SmsMessage::factory()->create(['sms_campaign_id' => $campaign->id, 'phone' => '+2348031234567']);
+
+        $this->operator()
+            ->postJson(route('admin.sms.process', $campaign))
+            ->assertOk()
+            ->assertJsonPath('sent', 1)
+            ->assertJsonPath('remaining', 0);
+
+        Http::assertSent(fn (Request $request): bool => $request->url() === 'https://api.sendchamp.com/api/v1/sms/send'
+            && $request->hasHeader('Authorization', 'Bearer test-sendchamp-key')
+            && $request['to'] === ['2348031234567']
+            && $request['sender_name'] === 'Sendchamp'
+            && $request['route'] === 'non_dnd');
+
+        $message = $campaign->messages()->sole();
+
+        $this->assertSame('sent', $message->status);
+        $this->assertSame('MN-SMS-ad51fcd1-8257-4fc5-b6df-11cf2ddcdfac', $message->provider_message_id);
+        $this->assertSame(200, $message->response_status);
+        $this->assertSame('Bearer ••••redacted', $message->request_headers['Authorization']);
+    }
+
+    public function test_a_rejected_sendchamp_response_is_recorded_as_failed(): void
+    {
+        $this->configureSendchamp();
+        Http::preventStrayRequests();
+        Http::fake([
+            'api.sendchamp.com/*' => Http::response([
+                'status' => 'failed',
+                'code' => 400,
+                'message' => 'Message required',
+            ], 400),
+        ]);
+
+        $campaign = SmsCampaign::factory()->create([
+            'provider' => SmsProvider::Sendchamp->value,
+            'sender_id' => 'Sendchamp',
+            'total_recipients' => 1,
+        ]);
+        SmsMessage::factory()->create(['sms_campaign_id' => $campaign->id, 'phone' => '+2348031234567']);
+
+        $this->operator()->postJson(route('admin.sms.process', $campaign))->assertOk();
+
+        $message = $campaign->messages()->sole();
+
+        $this->assertSame('failed', $message->status);
+        $this->assertSame(400, $message->response_status);
+        $this->assertStringContainsString('Message required', $message->error);
+    }
+
+    public function test_a_broadcast_is_rejected_for_an_unknown_provider(): void
+    {
+        $this->operator()
+            ->postJson(route('admin.sms.store'), [
+                'provider' => 'telegram',
+                'mode' => 'manual',
+                'manual_numbers' => '08031234567',
+                'message' => 'Test message',
+            ])
+            ->assertStatus(422)
+            ->assertJsonValidationErrors('provider');
+    }
+
+    public function test_the_campaign_records_the_selected_provider_and_sender_id(): void
+    {
+        $this->configureSendchamp();
+
+        $this->operator()
+            ->postJson(route('admin.sms.store'), [
+                'provider' => 'sendchamp',
+                'mode' => 'manual',
+                'manual_numbers' => '08031234567',
+                'message' => 'Test message',
+            ])
+            ->assertOk();
+
+        $campaign = SmsCampaign::query()->sole();
+
+        $this->assertSame(SmsProvider::Sendchamp, $campaign->provider);
+        $this->assertSame('Sendchamp', $campaign->sender_id);
     }
 
     public function test_a_rejected_termii_response_is_recorded_as_failed(): void

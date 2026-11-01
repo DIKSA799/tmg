@@ -2,6 +2,7 @@
 
 namespace Database\Factories;
 
+use App\Enums\SmsProvider;
 use App\Models\SmsCampaign;
 use Illuminate\Database\Eloquent\Factories\Factory;
 
@@ -15,6 +16,7 @@ class SmsCampaignFactory extends Factory
     public function definition(): array
     {
         return [
+            'provider' => SmsProvider::Termii->value,
             'admin_id' => null,
             'state_id' => null,
             'lga_id' => null,

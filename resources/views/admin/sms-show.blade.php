@@ -9,6 +9,7 @@
 
         <div class="admin-grid" style="grid-template-columns: repeat(auto-fit, minmax(9rem, 1fr));">
             <div><span class="admin-kpi-label">Target</span><p class="font-semibold">{{ $campaign->scope_label }}</p></div>
+            <div><span class="admin-kpi-label">Provider</span><p class="font-semibold">{{ $campaign->provider->label() }}</p></div>
             <div><span class="admin-kpi-label">Sender ID</span><p class="font-semibold">{{ $campaign->sender_id ?: '—' }}</p></div>
             <div><span class="admin-kpi-label">Recipients</span><p class="num font-semibold" data-sms-total>{{ number_format($campaign->total_recipients) }}</p></div>
             <div><span class="admin-kpi-label">Sent</span><p class="num font-semibold" data-sms-sent>{{ number_format($campaign->sent_count) }}</p></div>

@@ -64,4 +64,24 @@ return [
         'batch_size' => (int) env('TERMII_BATCH_SIZE', 25),
     ],
 
+    /*
+    |--------------------------------------------------------------------------
+    | Sendchamp (SMS)
+    |--------------------------------------------------------------------------
+    |
+    | Credentials for the Sendchamp messaging API. `route` selects the delivery
+    | route: dnd (transactional), non_dnd (promotional) or international.
+    |
+    */
+
+    'sendchamp' => [
+        'enabled' => (bool) env('SENDCHAMP_ENABLED', true),
+        'key' => env('SENDCHAMP_API_KEY'),
+        'sender_id' => env('SENDCHAMP_SENDER_ID', 'Sendchamp'),
+        'base_url' => env('SENDCHAMP_BASE_URL', 'https://api.sendchamp.com/api/v1'),
+        'route' => env('SENDCHAMP_ROUTE', 'non_dnd'),
+        'timeout' => (int) env('SENDCHAMP_TIMEOUT', 10),
+        'batch_size' => (int) env('SENDCHAMP_BATCH_SIZE', 25),
+    ],
+
 ];

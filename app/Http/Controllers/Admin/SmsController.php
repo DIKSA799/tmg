@@ -3,13 +3,14 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Actions\CreateSmsCampaign;
+use App\Enums\SmsProvider;
 use App\Http\Controllers\Controller;
 use App\Models\Lga;
 use App\Models\SmsCampaign;
 use App\Models\SmsMessage;
 use App\Models\State;
 use App\Models\VoterRecord;
-use App\Services\Sms\TermiiClient;
+use App\Services\Sms\SmsGatewayFactory;
 use App\Support\PhoneNumber;
 use Illuminate\Contracts\View\View;
 use Illuminate\Http\JsonResponse;
@@ -32,8 +33,9 @@ class SmsController extends Controller
                 ->orderByDesc('created_at')
                 ->orderByDesc('id')
                 ->paginate(20),
-            'senderId' => (string) config('services.termii.sender_id'),
-            'configured' => $this->configured(),
+            'providers' => $this->providers(),
+            'defaultProvider' => collect(SmsProvider::cases())->first(fn (SmsProvider $provider): bool => $provider->configured())?->value ?? SmsProvider::Termii->value,
+            'anyConfigured' => collect(SmsProvider::cases())->contains(fn (SmsProvider $provider): bool => $provider->configured()),
         ]);
     }
 
@@ -60,24 +62,29 @@ class SmsController extends Controller
      */
     public function store(Request $request, CreateSmsCampaign $action): JsonResponse
     {
-        $this->ensureConfigured();
-
         $validated = $request->validate([
+            'provider' => ['required', Rule::enum(SmsProvider::class)],
             'mode' => ['required', Rule::in([self::MODE_LOCATION, self::MODE_MANUAL])],
             'message' => ['required', 'string', 'max:1000'],
             'state_id' => [Rule::requiredIf($request->input('mode') === self::MODE_LOCATION), 'nullable', 'integer', 'exists:states,id'],
             'lga_id' => ['nullable', 'integer', Rule::exists('lgas', 'id')->where('state_id', $request->integer('state_id'))],
             'manual_numbers' => [Rule::requiredIf($request->input('mode') === self::MODE_MANUAL), 'nullable', 'string', 'max:20000'],
+            'test_numbers' => ['nullable', 'string', 'max:20000'],
         ]);
+
+        $provider = SmsProvider::from($validated['provider']);
+        $this->ensureConfigured($provider);
 
         $admin = $request->user('admin');
 
         if ($validated['mode'] === self::MODE_LOCATION) {
             $campaign = $action->forLocation(
                 $admin,
+                $provider,
                 State::query()->findOrFail($validated['state_id']),
                 isset($validated['lga_id']) ? Lga::query()->find($validated['lga_id']) : null,
                 $validated['message'],
+                $this->parseManualNumbers((string) ($validated['test_numbers'] ?? '')),
             );
         } else {
             $numbers = $this->parseManualNumbers((string) ($validated['manual_numbers'] ?? ''));
@@ -88,7 +95,7 @@ class SmsController extends Controller
                 ]);
             }
 
-            $campaign = $action->forNumbers($admin, $numbers, $validated['message']);
+            $campaign = $action->forNumbers($admin, $provider, $numbers, $validated['message']);
         }
 
         return response()->json([
@@ -100,19 +107,22 @@ class SmsController extends Controller
     /**
      * Send the next batch of pending messages and report progress.
      */
-    public function process(SmsCampaign $campaign, TermiiClient $client): JsonResponse
+    public function process(SmsCampaign $campaign, SmsGatewayFactory $gateways): JsonResponse
     {
-        $this->ensureConfigured();
+        $this->ensureConfigured($campaign->provider);
         set_time_limit(120);
 
         $messages = $campaign->messages()
             ->where('status', SmsMessage::STATUS_PENDING)
             ->orderBy('id')
-            ->limit(max(1, (int) config('services.termii.batch_size', 25)))
+            ->limit(max(1, (int) config("services.{$campaign->provider->value}.batch_size", 25)))
             ->get();
 
+        $gateway = $gateways->make($campaign->provider);
+        $senderId = (string) $campaign->sender_id;
+
         foreach ($messages as $message) {
-            $message->recordResult($client->send($message->phone, $campaign->message));
+            $message->recordResult($gateway->send($message->phone, $campaign->message, $senderId));
         }
 
         $campaign->refreshCounters();
@@ -141,18 +151,28 @@ class SmsController extends Controller
         ]);
     }
 
-    private function configured(): bool
+    /**
+     * Provider options with their sender id and whether they can currently send.
+     *
+     * @return list<array{value: string, label: string, senderId: ?string, configured: bool}>
+     */
+    private function providers(): array
     {
-        return (bool) config('services.termii.enabled')
-            && filled(config('services.termii.key'))
-            && filled(config('services.termii.sender_id'));
+        return collect(SmsProvider::cases())
+            ->map(fn (SmsProvider $provider): array => [
+                'value' => $provider->value,
+                'label' => $provider->label(),
+                'senderId' => $provider->senderId(),
+                'configured' => $provider->configured(),
+            ])
+            ->all();
     }
 
-    private function ensureConfigured(): void
+    private function ensureConfigured(SmsProvider $provider): void
     {
-        if (! $this->configured()) {
+        if (! $provider->configured()) {
             throw ValidationException::withMessages([
-                'termii' => 'Termii is not configured. Set TERMII_API_KEY and TERMII_SENDER_ID in the environment.',
+                'provider' => "{$provider->label()} is not configured. Set its API key and sender id in the environment, then clear the config cache.",
             ]);
         }
     }
