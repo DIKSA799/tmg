@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use Database\Factories\VoterRecordFactory;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -109,5 +110,18 @@ class VoterRecord extends Model
     public function ambassador(): HasOne
     {
         return $this->hasOne(Ambassador::class);
+    }
+
+    /**
+     * Restrict to records inside a state, and optionally a single LGA in it.
+     *
+     * @param  Builder<VoterRecord>  $query
+     * @return Builder<VoterRecord>
+     */
+    public function scopeInLocation(Builder $query, ?int $stateId, ?int $lgaId = null): Builder
+    {
+        return $query
+            ->when($stateId, fn (Builder $inner) => $inner->where('state_id', $stateId))
+            ->when($lgaId, fn (Builder $inner) => $inner->where('lga_id', $lgaId));
     }
 }

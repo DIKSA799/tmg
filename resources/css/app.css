@@ -1827,6 +1827,19 @@
         padding-right: 2rem;
     }
 
+    .sms-pre {
+        margin: 0;
+        padding: 0.6rem 0.7rem;
+        border: 1px solid var(--line);
+        border-radius: 10px;
+        background: color-mix(in oklab, var(--paper) 70%, transparent);
+        color: var(--ink-soft);
+        font-size: 0.72rem;
+        line-height: 1.5;
+        white-space: pre-wrap;
+        word-break: break-word;
+    }
+
     .admin-login-wrap {
         position: relative;
         display: grid;

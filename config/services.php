@@ -42,4 +42,26 @@ return [
         'ttl' => (int) env('GEOCODING_TTL', 86400),
     ],
 
+    /*
+    |--------------------------------------------------------------------------
+    | Termii (SMS)
+    |--------------------------------------------------------------------------
+    |
+    | Credentials for the Termii messaging API. The sender ID must be an
+    | alphanumeric ID approved on the Termii account (3-11 characters), and the
+    | base URL is the account-specific host shown on the Termii dashboard.
+    |
+    */
+
+    'termii' => [
+        'enabled' => (bool) env('TERMII_ENABLED', true),
+        'key' => env('TERMII_API_KEY'),
+        'sender_id' => env('TERMII_SENDER_ID', 'TMG'),
+        'base_url' => env('TERMII_BASE_URL', 'https://api.ng.termii.com'),
+        'channel' => env('TERMII_CHANNEL', 'generic'),
+        'type' => env('TERMII_TYPE', 'plain'),
+        'timeout' => (int) env('TERMII_TIMEOUT', 10),
+        'batch_size' => (int) env('TERMII_BATCH_SIZE', 25),
+    ],
+
 ];
