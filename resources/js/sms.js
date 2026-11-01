@@ -19,6 +19,72 @@ function setPanel(element, visible) {
     element.style.display = visible ? '' : 'none';
 }
 
+function escapeHtml(value) {
+    return String(value ?? '').replace(/[&<>"']/g, (character) => ({
+        '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;',
+    })[character]);
+}
+
+function pretty(value) {
+    if (value === null || value === undefined || value === '') {
+        return '—';
+    }
+
+    if (typeof value === 'string') {
+        try {
+            return JSON.stringify(JSON.parse(value), null, 2);
+        } catch {
+            return value;
+        }
+    }
+
+    return JSON.stringify(value, null, 2);
+}
+
+function exchangeBlock(label, value) {
+    const wrap = document.createElement('div');
+
+    const heading = document.createElement('span');
+    heading.className = 'admin-kpi-label';
+    heading.textContent = label;
+
+    const pre = document.createElement('pre');
+    pre.className = 'sms-pre';
+    pre.textContent = pretty(value);
+
+    wrap.append(heading, pre);
+
+    return wrap;
+}
+
+// Append one live request/response entry to the send log.
+function appendLogRow(container, result) {
+    const details = document.createElement('details');
+    details.className = 'sms-log-row';
+    details.open = result.status !== 'sent';
+
+    const summary = document.createElement('summary');
+    summary.className = 'flex cursor-pointer items-center gap-2 text-xs';
+    summary.innerHTML = `<span class="num">${escapeHtml(result.phone)}</span>`
+        + `<span class="admin-pill">${escapeHtml(result.status)}</span>`
+        + `<span class="truncate text-[color:var(--ink-mute)]">${escapeHtml(result.provider_message_id || result.provider_status || result.error || '')}</span>`;
+
+    const body = document.createElement('div');
+    body.className = 'mt-2 grid gap-2';
+    body.append(
+        exchangeBlock('Request URL', result.request_url),
+        exchangeBlock('Request headers', result.request_headers),
+        exchangeBlock('Request body', result.request_body),
+        exchangeBlock('Response status', result.response_status),
+        exchangeBlock('Response headers', result.response_headers),
+        exchangeBlock('Response body', result.response_body),
+    );
+
+    details.append(summary, body);
+    container.append(details);
+    container.scrollTop = container.scrollHeight;
+}
+
 // Mirrors App\Support\PhoneNumber::normalize so the live count matches what the
 // server will accept. Returns bare national digits, or null when invalid.
 function normaliseNumber(value) {
@@ -103,17 +169,21 @@ function paintProgress(ui, progress) {
     }
 }
 
-async function runBatches(processUrl, ui) {
+async function runBatches(processUrl, ui, onResults) {
     while (true) {
         const progress = await requestJson(processUrl, { method: 'POST' });
         paintProgress(ui, progress);
+
+        if (onResults && Array.isArray(progress.results)) {
+            progress.results.forEach((result) => onResults(result));
+        }
 
         if (progress.remaining <= 0) {
             return progress;
         }
 
         if (progress.processed === 0) {
-            throw new Error('Termii returned no progress for the next batch; stopping to avoid a loop.');
+            throw new Error('The provider returned no progress for the next batch; stopping to avoid a loop.');
         }
     }
 }
@@ -141,6 +211,7 @@ function initCompose(config) {
     const sendButton = root.querySelector('[data-sms-send]');
     const status = root.querySelector('[data-sms-status]');
     const progressBox = root.querySelector('[data-sms-progress]');
+    const logContainer = root.querySelector('[data-sms-log]');
     const detail = root.querySelector('[data-sms-detail]');
     const totalSpan = root.querySelector('[data-sms-total]');
     const modeButtons = Array.from(root.querySelectorAll('[data-sms-mode]'));
@@ -278,6 +349,7 @@ function initCompose(config) {
         sendButton.disabled = true;
         setPanel(progressBox, true);
         setPanel(detail, false);
+        logContainer?.replaceChildren();
         status.textContent = 'Creating campaign…';
         paintProgress(ui, { sent: 0, failed: 0, remaining: 0, total: 0 });
 
@@ -291,7 +363,11 @@ function initCompose(config) {
             paintProgress(ui, { sent: 0, failed: 0, remaining: created.total, total: created.total });
             status.textContent = `Sending to ${format(created.total)} recipient(s)…`;
 
-            await runBatches(config.processUrl.replace('__ID__', created.campaign_id), ui);
+            await runBatches(
+                config.processUrl.replace('__ID__', created.campaign_id),
+                ui,
+                logContainer ? (result) => appendLogRow(logContainer, result) : null,
+            );
 
             status.textContent = 'Done.';
             detail.href = config.detailUrl.replace('__ID__', created.campaign_id);
@@ -318,6 +394,7 @@ function initResume(config) {
 
     const button = root.querySelector('[data-sms-resume-run]');
     const status = root.querySelector('[data-sms-status]');
+    const logContainer = root.querySelector('[data-sms-log]');
     const total = Number(root.dataset.total ?? 0);
 
     const ui = {
@@ -340,7 +417,7 @@ function initResume(config) {
         status.textContent = 'Sending the remaining messages…';
 
         try {
-            await runBatches(config.processUrl, ui);
+            await runBatches(config.processUrl, ui, logContainer ? (result) => appendLogRow(logContainer, result) : null);
 
             status.textContent = 'Finished. Refreshing…';
             window.location.reload();

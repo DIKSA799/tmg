@@ -334,6 +334,34 @@ class SmsCampaignTest extends TestCase
         $this->assertSame('Sendchamp', $campaign->sender_id);
     }
 
+    public function test_the_process_response_returns_the_live_exchange_for_the_log(): void
+    {
+        $this->configureTermii();
+        Http::preventStrayRequests();
+        Http::fake([
+            'api.ng.termii.com/*' => Http::response([
+                'code' => 'ok',
+                'message_id' => '301',
+                'message' => 'Successfully Sent',
+            ], 200),
+        ]);
+
+        $campaign = SmsCampaign::factory()->create(['message' => 'Hello', 'total_recipients' => 1]);
+        SmsMessage::factory()->create(['sms_campaign_id' => $campaign->id, 'phone' => '+2348031234567']);
+
+        $response = $this->operator()
+            ->postJson(route('admin.sms.process', $campaign))
+            ->assertOk()
+            ->assertJsonPath('results.0.phone', '+2348031234567')
+            ->assertJsonPath('results.0.status', 'sent')
+            ->assertJsonPath('results.0.response_status', 200)
+            ->assertJsonPath('results.0.provider_message_id', '301');
+
+        $this->assertSame('2348031234567', $response->json('results.0.request_body.to'));
+        $this->assertSame('••••redacted', $response->json('results.0.request_body.api_key'));
+        $this->assertIsArray($response->json('results.0.response_headers'));
+    }
+
     public function test_a_rejected_termii_response_is_recorded_as_failed(): void
     {
         $this->configureTermii();

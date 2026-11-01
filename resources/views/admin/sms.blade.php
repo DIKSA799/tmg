@@ -100,6 +100,8 @@
                 remaining <span class="num" data-sms-remaining>0</span> of <span class="num" data-sms-total>0</span>
             </p>
             <p class="mt-2 text-sm"><a class="amb-link" href="#" data-sms-detail hidden>View details &amp; headers &rarr;</a></p>
+
+            <div class="mt-3 grid gap-2" data-sms-log aria-live="polite" aria-label="Live API responses" style="max-height: 26rem; overflow-y: auto;"></div>
         </div>
     </section>
 

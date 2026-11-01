@@ -27,6 +27,8 @@
                 <div class="mt-3 admin-progress"><span data-sms-bar style="width: 0%"></span></div>
                 <p class="mt-2 text-sm">Remaining <span class="num" data-sms-remaining>{{ number_format($campaign->total_recipients - $campaign->sent_count - $campaign->failed_count) }}</span></p>
                 <p class="mt-2 text-xs text-[color:var(--ink-mute)]">Keep this tab open until it finishes. If it stops, reopen this page and press the button again.</p>
+
+                <div class="mt-3 grid gap-2" data-sms-log aria-live="polite" aria-label="Live API responses" style="max-height: 26rem; overflow-y: auto;"></div>
             </div>
         @endif
     </section>

@@ -1840,6 +1840,13 @@
         word-break: break-word;
     }
 
+    .sms-log-row {
+        border: 1px solid var(--line);
+        border-radius: 12px;
+        padding: 0.5rem 0.65rem;
+        background: color-mix(in oklab, var(--paper) 55%, transparent);
+    }
+
     .admin-login-wrap {
         position: relative;
         display: grid;

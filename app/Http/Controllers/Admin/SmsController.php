@@ -134,6 +134,20 @@ class SmsController extends Controller
             'remaining' => $campaign->messages()->where('status', SmsMessage::STATUS_PENDING)->count(),
             'total' => $campaign->total_recipients,
             'status' => $campaign->status,
+            'results' => $messages->map(fn (SmsMessage $message): array => [
+                'phone' => $message->phone,
+                'status' => $message->status,
+                'provider_message_id' => $message->provider_message_id,
+                'provider_status' => $message->provider_status,
+                'error' => $message->error,
+                'request_url' => $message->request_url,
+                'request_headers' => $message->request_headers,
+                'request_body' => $message->request_body,
+                'response_status' => $message->response_status,
+                'response_headers' => $message->response_headers,
+                'response_body' => $message->response_body,
+                'sent_at' => $message->sent_at?->toIso8601String(),
+            ])->all(),
         ]);
     }
 
