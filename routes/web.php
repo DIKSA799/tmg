@@ -161,6 +161,7 @@ Route::prefix(config('admin.path'))
             Route::get('leaderboard/{nomination}', [AdminLeaderboardController::class, 'show'])->name('leaderboard.show');
             Route::get('records', [AdminRecordController::class, 'index'])->name('records');
             Route::get('records/export', [AdminRecordController::class, 'export'])->name('records.export');
+            Route::get('records/export-phones', [AdminRecordController::class, 'exportPhones'])->name('records.export-phones');
             Route::get('geography', [AdminGeographyController::class, 'index'])->name('geography');
             Route::get('senatorial', [AdminSenatorialController::class, 'index'])->name('senatorial');
             Route::get('settings', [AdminSettingsController::class, 'index'])->name('settings');

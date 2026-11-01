@@ -3,6 +3,24 @@
         <span class="admin-pill">{{ number_format($records->total()) }} matching</span>
         <span class="admin-pill">Page {{ $records->currentPage() }} of {{ max(1, $records->lastPage()) }}</span>
         <a href="{{ route('admin.records.export', array_filter($filters)) }}" class="btn btn-ghost !px-4 !py-2.5 text-xs">Export CSV</a>
+
+        <form method="GET" action="{{ route('admin.records.export-phones') }}" class="flex flex-wrap items-center gap-2">
+            @foreach (array_filter($filters) as $key => $value)
+                <input type="hidden" name="{{ $key }}" value="{{ $value }}">
+            @endforeach
+
+            <select name="channel" class="admin-input" style="width: auto; min-width: 7.5rem;" aria-label="Phone export channel">
+                <option value="whatsapp">WhatsApp</option>
+                <option value="sms">SMS</option>
+            </select>
+
+            <select name="strip" class="admin-input" style="width: auto; min-width: 7.5rem;" aria-label="Country code handling">
+                <option value="0">Keep +234</option>
+                <option value="1">Strip +234</option>
+            </select>
+
+            <button type="submit" class="btn btn-ghost !px-4 !py-2.5 text-xs">Export phones</button>
+        </form>
     </x-slot:actions>
 
     <form class="admin-card admin-grid" method="GET" action="{{ route('admin.records') }}" style="grid-template-columns: repeat(auto-fit, minmax(10.5rem, 1fr));">

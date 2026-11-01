@@ -154,6 +154,57 @@ class ConsolePagesTest extends TestCase
         $this->assertStringNotContainsString('Bello Adamu', $csv);
     }
 
+    public function test_whatsapp_phone_numbers_can_be_exported_with_the_country_code_stripped(): void
+    {
+        VoterRecord::factory()->create([
+            'phone' => '+2348031234567',
+            'whatsapp' => '+2348051234567',
+        ]);
+
+        $csv = $this->actingAs(Admin::factory()->create(), 'admin')
+            ->get(route('admin.records.export-phones', ['channel' => 'whatsapp', 'strip' => '1']))
+            ->streamedContent();
+
+        $this->assertStringContainsString('8051234567', $csv);
+        $this->assertStringNotContainsString('+2348051234567', $csv);
+    }
+
+    public function test_phone_export_falls_back_to_the_main_phone_when_whatsapp_is_missing(): void
+    {
+        VoterRecord::factory()->create([
+            'phone' => '+2348031234567',
+            'whatsapp' => null,
+        ]);
+
+        $csv = $this->actingAs(Admin::factory()->create(), 'admin')
+            ->get(route('admin.records.export-phones', ['channel' => 'whatsapp']))
+            ->streamedContent();
+
+        $this->assertStringContainsString('+2348031234567', $csv);
+    }
+
+    public function test_phone_export_uses_the_main_phone_for_sms(): void
+    {
+        VoterRecord::factory()->create([
+            'phone' => '+2348031234567',
+            'whatsapp' => '+2348051234567',
+        ]);
+
+        $csv = $this->actingAs(Admin::factory()->create(), 'admin')
+            ->get(route('admin.records.export-phones', ['channel' => 'sms', 'strip' => '1']))
+            ->streamedContent();
+
+        $this->assertStringContainsString('8031234567', $csv);
+        $this->assertStringNotContainsString('8051234567', $csv);
+    }
+
+    public function test_a_phone_export_requires_a_valid_channel(): void
+    {
+        $this->actingAs(Admin::factory()->create(), 'admin')
+            ->get(route('admin.records.export-phones', ['channel' => 'telegram']))
+            ->assertSessionHasErrors('channel');
+    }
+
     public function test_an_invalid_record_filter_is_rejected(): void
     {
         $this->actingAs(Admin::factory()->create(), 'admin')

@@ -94,11 +94,55 @@ class RecordController extends Controller
     }
 
     /**
+     * Stream a single-column list of the phone numbers matching the current
+     * filters, for pasting into a bulk WhatsApp or SMS sender. The channel
+     * picks which number per record and the caller chooses whether the +234
+     * country code is stripped.
+     */
+    public function exportPhones(Request $request): StreamedResponse
+    {
+        $filters = $this->filters($request);
+        $channel = $filters['channel'] ?? 'whatsapp';
+        $strip = (bool) ($filters['strip'] ?? false);
+
+        $filename = 'tmg-'.$channel.'-numbers-'.now()->format('Y-m-d-His').'.csv';
+
+        return response()->streamDownload(function () use ($filters, $channel, $strip): void {
+            $handle = fopen('php://output', 'w');
+
+            foreach ($this->filtered($filters)->lazy(500) as $record) {
+                $number = $channel === 'whatsapp'
+                    ? ($record->whatsapp ?: $record->phone)
+                    : $record->phone;
+
+                if (blank($number)) {
+                    continue;
+                }
+
+                fputcsv($handle, [$strip ? $this->stripCountryCode($number) : $number], ',', '"', '');
+            }
+
+            fclose($handle);
+        }, $filename, ['Content-Type' => 'text/csv']);
+    }
+
+    /**
+     * Drop a leading +234 country code so a number reads as bare national
+     * digits (e.g. +2348031234567 becomes 8031234567).
+     */
+    private function stripCountryCode(string $number): string
+    {
+        return str_starts_with($number, '+234') ? substr($number, 4) : $number;
+    }
+
+    /**
      * @return array<string, mixed>
      */
     private function filters(Request $request): array
     {
         return $request->validate([
+            'channel' => ['nullable', Rule::in(['whatsapp', 'sms'])],
+            'strip' => ['nullable', 'boolean'],
             'search' => ['nullable', 'string', 'max:60'],
             'state_id' => ['nullable', 'integer'],
             'lga_id' => ['nullable', 'integer'],
