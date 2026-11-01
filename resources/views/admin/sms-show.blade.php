@@ -14,16 +14,33 @@
             <div><span class="admin-kpi-label">Recipients</span><p class="num font-semibold" data-sms-total>{{ number_format($campaign->total_recipients) }}</p></div>
             <div><span class="admin-kpi-label">Sent</span><p class="num font-semibold" data-sms-sent>{{ number_format($campaign->sent_count) }}</p></div>
             <div><span class="admin-kpi-label">Failed</span><p class="num font-semibold" data-sms-failed>{{ number_format($campaign->failed_count) }}</p></div>
+            <div><span class="admin-kpi-label">Skipped</span><p class="num font-semibold">{{ number_format($campaign->skipped_count) }}</p></div>
             <div><span class="admin-kpi-label">Created</span><p class="font-semibold">{{ $campaign->created_at?->format('d M Y H:i') }}</p></div>
             <div><span class="admin-kpi-label">By</span><p class="font-semibold">{{ $campaign->admin?->name ?? '—' }}</p></div>
         </div>
 
         <p class="mt-4 whitespace-pre-line text-sm">{{ $campaign->message }}</p>
 
-        @if ($hasPending)
-            <div class="mt-4" data-sms-resume data-total="{{ $campaign->total_recipients }}">
-                <button type="button" class="btn btn-primary" data-sms-resume-run>Resume sending</button>
-                <span class="text-sm text-[color:var(--ink-mute)]" data-sms-status></span>
+        @if ($hasPending || $campaign->failed_count > 0)
+            <div class="mt-4" data-sms-resume data-total="{{ $campaign->total_recipients }}" data-resume="{{ $campaign->paused ? '1' : '0' }}" data-retry-url="{{ route('admin.sms.retry', $campaign) }}">
+                <div class="flex flex-wrap items-center gap-3">
+                    @if ($hasPending)
+                        <button type="button" class="btn btn-primary" data-sms-resume-run>
+                            {{ $campaign->paused ? 'Continue sending to everyone' : 'Resume sending' }}
+                        </button>
+                    @endif
+
+                    @if ($campaign->failed_count > 0)
+                        <button type="button" class="btn btn-ghost" data-sms-retry-run>Retry failed ({{ number_format($campaign->failed_count) }})</button>
+                    @endif
+
+                    <span class="text-sm text-[color:var(--ink-mute)]" data-sms-status></span>
+                </div>
+
+                @if ($campaign->paused)
+                    <p class="mt-3 text-sm font-semibold">Paused after the test numbers — the rest of the list is waiting.</p>
+                @endif
+
                 <div class="mt-3 admin-progress"><span data-sms-bar style="width: 0%"></span></div>
                 <p class="mt-2 text-sm">Remaining <span class="num" data-sms-remaining>{{ number_format($campaign->total_recipients - $campaign->sent_count - $campaign->failed_count) }}</span></p>
                 <p class="mt-2 text-xs text-[color:var(--ink-mute)]">Keep this tab open until it finishes. If it stops, reopen this page and press the button again.</p>

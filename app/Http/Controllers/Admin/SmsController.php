@@ -13,6 +13,7 @@ use App\Models\VoterRecord;
 use App\Services\Sms\SmsGatewayFactory;
 use App\Support\PhoneNumber;
 use Illuminate\Contracts\View\View;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Validation\Rule;
@@ -70,6 +71,9 @@ class SmsController extends Controller
             'lga_id' => ['nullable', 'integer', Rule::exists('lgas', 'id')->where('state_id', $request->integer('state_id'))],
             'manual_numbers' => [Rule::requiredIf($request->input('mode') === self::MODE_MANUAL), 'nullable', 'string', 'max:20000'],
             'test_numbers' => ['nullable', 'string', 'max:20000'],
+            'skip_recent' => ['boolean'],
+            'skip_days' => ['nullable', 'integer', 'min:1', 'max:365'],
+            'pause_after_test' => ['boolean'],
         ]);
 
         $provider = SmsProvider::from($validated['provider']);
@@ -85,6 +89,8 @@ class SmsController extends Controller
                 isset($validated['lga_id']) ? Lga::query()->find($validated['lga_id']) : null,
                 $validated['message'],
                 $this->parseManualNumbers((string) ($validated['test_numbers'] ?? '')),
+                $request->boolean('skip_recent') ? max(1, (int) ($validated['skip_days'] ?? 30)) : null,
+                $request->boolean('pause_after_test'),
             );
         } else {
             $numbers = $this->parseManualNumbers((string) ($validated['manual_numbers'] ?? ''));
@@ -107,13 +113,22 @@ class SmsController extends Controller
     /**
      * Send the next batch of pending messages and report progress.
      */
-    public function process(SmsCampaign $campaign, SmsGatewayFactory $gateways): JsonResponse
+    public function process(Request $request, SmsCampaign $campaign, SmsGatewayFactory $gateways): JsonResponse
     {
         $this->ensureConfigured($campaign->provider);
+
+        // "Continue" lifts a test-review pause so the full list sends.
+        if ($request->boolean('resume')) {
+            $campaign->update(['paused' => false]);
+        }
+
         set_time_limit(120);
 
         $messages = $campaign->messages()
             ->where('status', SmsMessage::STATUS_PENDING)
+            // While paused after the test send, only the test numbers (queued with
+            // no voter record) go out; the rest waits for the operator.
+            ->when($campaign->paused, fn (Builder $query): Builder => $query->whereNull('voter_record_id'))
             ->orderBy('id')
             ->limit(max(1, (int) config("services.{$campaign->provider->value}.batch_size", 25)))
             ->get();
@@ -134,6 +149,8 @@ class SmsController extends Controller
             'remaining' => $campaign->messages()->where('status', SmsMessage::STATUS_PENDING)->count(),
             'total' => $campaign->total_recipients,
             'status' => $campaign->status,
+            'paused' => $campaign->paused,
+            'skipped' => $campaign->skipped_count,
             'results' => $messages->map(fn (SmsMessage $message): array => [
                 'phone' => $message->phone,
                 'status' => $message->status,
@@ -148,6 +165,72 @@ class SmsController extends Controller
                 'response_body' => $message->response_body,
                 'sent_at' => $message->sent_at?->toIso8601String(),
             ])->all(),
+        ]);
+    }
+
+    /**
+     * Re-queue every failed message so it is sent again, and lift any pause.
+     */
+    public function retry(SmsCampaign $campaign): JsonResponse
+    {
+        $this->ensureConfigured($campaign->provider);
+
+        $campaign->messages()
+            ->where('status', SmsMessage::STATUS_FAILED)
+            ->update([
+                'status' => SmsMessage::STATUS_PENDING,
+                'provider_message_id' => null,
+                'provider_status' => null,
+                'error' => null,
+                'request_url' => null,
+                'request_headers' => null,
+                'request_body' => null,
+                'response_status' => null,
+                'response_headers' => null,
+                'response_body' => null,
+                'sent_at' => null,
+                'updated_at' => now(),
+            ]);
+
+        $campaign->update(['paused' => false]);
+        $campaign->refreshCounters();
+
+        return response()->json([
+            'sent' => $campaign->sent_count,
+            'failed' => $campaign->failed_count,
+            'remaining' => $campaign->messages()->where('status', SmsMessage::STATUS_PENDING)->count(),
+            'total' => $campaign->total_recipients,
+            'status' => $campaign->status,
+            'paused' => $campaign->paused,
+        ]);
+    }
+
+    /**
+     * Whether the same location was broadcast to in the last day, so the compose
+     * form can warn before sending a likely duplicate.
+     */
+    public function recent(Request $request): JsonResponse
+    {
+        $validated = $request->validate([
+            'state_id' => ['required', 'integer', 'exists:states,id'],
+            'lga_id' => ['nullable', 'integer', 'exists:lgas,id'],
+        ]);
+
+        $campaign = SmsCampaign::query()
+            ->where('state_id', $validated['state_id'])
+            ->when(
+                $validated['lga_id'] ?? null,
+                fn (Builder $query, int|string $lga): Builder => $query->where('lga_id', $lga),
+                fn (Builder $query): Builder => $query->whereNull('lga_id'),
+            )
+            ->where('created_at', '>=', now()->subDay())
+            ->latest('id')
+            ->first();
+
+        return response()->json([
+            'recent' => $campaign !== null,
+            'sent_at' => $campaign?->created_at?->diffForHumans(),
+            'recipients' => $campaign?->total_recipients,
         ]);
     }
 

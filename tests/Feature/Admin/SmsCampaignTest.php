@@ -125,6 +125,151 @@ class SmsCampaignTest extends TestCase
         $this->assertDatabaseCount('sms_messages', 3);
         $this->assertDatabaseHas('sms_messages', ['phone' => '+2348127234628', 'voter_record_id' => null]);
         $this->assertSame(1, $campaign->messages()->where('phone', '+2348031111111')->count());
+
+        // Test numbers are queued first so they are the first messages sent.
+        $this->assertSame('+2348127234628', $campaign->messages()->orderBy('id')->value('phone'));
+    }
+
+    public function test_a_location_broadcast_can_pause_after_the_test_numbers_then_continue(): void
+    {
+        $this->configureTermii();
+        Http::preventStrayRequests();
+        Http::fake([
+            'api.ng.termii.com/*' => Http::response(['code' => 'ok', 'message_id' => '301', 'message' => 'Successfully Sent'], 200),
+        ]);
+
+        $state = State::factory()->create(['name' => 'Lagos']);
+        $lga = Lga::factory()->for($state)->create();
+        VoterRecord::factory()->count(2)->create(['state_id' => $state->id, 'lga_id' => $lga->id]);
+
+        $this->operator()
+            ->postJson(route('admin.sms.store'), [
+                'provider' => 'termii',
+                'mode' => 'location',
+                'state_id' => $state->id,
+                'message' => 'Hello Lagos',
+                'test_numbers' => '08127234628',
+                'pause_after_test' => 1,
+            ])
+            ->assertOk()
+            ->assertJsonPath('total', 3);
+
+        $campaign = SmsCampaign::query()->sole();
+
+        $this->assertTrue($campaign->paused);
+        $this->assertSame('paused', $campaign->status);
+
+        // The first pass sends only the test number and stops.
+        $this->operator()
+            ->postJson(route('admin.sms.process', $campaign))
+            ->assertOk()
+            ->assertJsonPath('sent', 1)
+            ->assertJsonPath('paused', true)
+            ->assertJsonPath('remaining', 2);
+
+        $this->assertDatabaseHas('sms_messages', ['phone' => '+2348127234628', 'status' => 'sent']);
+
+        // Continue lifts the pause and sends the rest.
+        $this->operator()
+            ->postJson(route('admin.sms.process', $campaign), ['resume' => true])
+            ->assertOk()
+            ->assertJsonPath('paused', false)
+            ->assertJsonPath('remaining', 0)
+            ->assertJsonPath('status', 'completed');
+
+        $this->assertSame(3, $campaign->messages()->where('status', SmsMessage::STATUS_SENT)->count());
+    }
+
+    public function test_a_broadcast_can_skip_numbers_messaged_in_the_last_n_days(): void
+    {
+        $this->configureTermii();
+
+        $state = State::factory()->create(['name' => 'Lagos']);
+        $lga = Lga::factory()->for($state)->create();
+        VoterRecord::factory()->create(['state_id' => $state->id, 'lga_id' => $lga->id, 'phone' => '+2348031111111']);
+        VoterRecord::factory()->create(['state_id' => $state->id, 'lga_id' => $lga->id, 'phone' => '+2348032222222']);
+
+        // This one was already messaged yesterday.
+        SmsMessage::factory()
+            ->create(['phone' => '+2348031111111', 'status' => SmsMessage::STATUS_SENT])
+            ->forceFill(['created_at' => now()->subDay()])
+            ->save();
+
+        $this->operator()
+            ->postJson(route('admin.sms.store'), [
+                'provider' => 'termii',
+                'mode' => 'location',
+                'state_id' => $state->id,
+                'message' => 'Hello Lagos',
+                'skip_recent' => 1,
+                'skip_days' => 7,
+            ])
+            ->assertOk()
+            ->assertJsonPath('total', 1);
+
+        $campaign = SmsCampaign::query()->latest('id')->first();
+
+        $this->assertSame(1, $campaign->total_recipients);
+        $this->assertSame(1, $campaign->skipped_count);
+        $this->assertDatabaseMissing('sms_messages', ['sms_campaign_id' => $campaign->id, 'phone' => '+2348031111111']);
+        $this->assertDatabaseHas('sms_messages', ['sms_campaign_id' => $campaign->id, 'phone' => '+2348032222222']);
+    }
+
+    public function test_failed_messages_can_be_retried(): void
+    {
+        $this->configureTermii();
+        Http::preventStrayRequests();
+        Http::fake([
+            'api.ng.termii.com/*' => Http::response(['code' => 'ok', 'message_id' => '301', 'message' => 'Successfully Sent'], 200),
+        ]);
+
+        $campaign = SmsCampaign::factory()->create([
+            'total_recipients' => 1,
+            'failed_count' => 1,
+            'status' => SmsCampaign::STATUS_PARTIAL,
+        ]);
+        SmsMessage::factory()->create([
+            'sms_campaign_id' => $campaign->id,
+            'phone' => '+2348031234567',
+            'status' => SmsMessage::STATUS_FAILED,
+            'error' => 'SENDER_ID_NOT_APPROVED',
+            'response_status' => 422,
+        ]);
+
+        $this->operator()
+            ->postJson(route('admin.sms.retry', $campaign))
+            ->assertOk()
+            ->assertJsonPath('remaining', 1);
+
+        $retried = $campaign->messages()->sole();
+
+        $this->assertSame('pending', $retried->status);
+        $this->assertNull($retried->error);
+        $this->assertNull($retried->response_status);
+
+        $this->operator()
+            ->postJson(route('admin.sms.process', $campaign))
+            ->assertOk()
+            ->assertJsonPath('sent', 1);
+
+        $this->assertSame('sent', $campaign->messages()->sole()->status);
+    }
+
+    public function test_the_recent_endpoint_reports_a_recent_broadcast(): void
+    {
+        $state = State::factory()->create(['name' => 'Lagos']);
+        SmsCampaign::factory()->create([
+            'state_id' => $state->id,
+            'lga_id' => null,
+            'scope_label' => 'Lagos',
+            'total_recipients' => 12,
+        ]);
+
+        $this->operator()
+            ->getJson(route('admin.sms.recent', ['state_id' => $state->id]))
+            ->assertOk()
+            ->assertJsonPath('recent', true)
+            ->assertJsonPath('recipients', 12);
     }
 
     public function test_a_manual_broadcast_normalises_and_deduplicates_numbers(): void

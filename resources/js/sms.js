@@ -15,6 +15,10 @@ function numberFrom(element) {
 // Toggle visibility with both the attribute and inline display, so a Tailwind
 // display utility (grid/flex) on the element can never keep it visible.
 function setPanel(element, visible) {
+    if (! element) {
+        return;
+    }
+
     element.hidden = ! visible;
     element.style.display = visible ? '' : 'none';
 }
@@ -169,13 +173,27 @@ function paintProgress(ui, progress) {
     }
 }
 
-async function runBatches(processUrl, ui, onResults) {
+/**
+ * Drive the sender one batch at a time, streaming every exchange to onResults.
+ * Returns early when the campaign is paused for a test review, or when it is done.
+ *
+ * @param {{resume?: boolean}} options  resume lifts a pause on the first call.
+ */
+async function sendLoop(processUrl, ui, onResults, { resume = false } = {}) {
+    let liftPause = resume;
+
     while (true) {
-        const progress = await requestJson(processUrl, { method: 'POST' });
+        const progress = await requestJson(processUrl, { method: 'POST', body: liftPause ? { resume: true } : {} });
+        liftPause = false;
+
         paintProgress(ui, progress);
 
         if (onResults && Array.isArray(progress.results)) {
             progress.results.forEach((result) => onResults(result));
+        }
+
+        if (progress.paused) {
+            return progress;
         }
 
         if (progress.remaining <= 0) {
@@ -205,6 +223,9 @@ function initCompose(config) {
     const numberCount = root.querySelector('[data-sms-number-count]');
     const testNumbersInput = root.querySelector('[data-sms-test-numbers]');
     const testCount = root.querySelector('[data-sms-test-count]');
+    const pauseAfterTest = root.querySelector('[data-sms-pause-after-test]');
+    const skipRecent = root.querySelector('[data-sms-skip-recent]');
+    const skipDays = root.querySelector('[data-sms-skip-days]');
     const message = root.querySelector('[data-sms-message]');
     const chars = root.querySelector('[data-sms-chars]');
     const segments = root.querySelector('[data-sms-segments]');
@@ -213,6 +234,7 @@ function initCompose(config) {
     const progressBox = root.querySelector('[data-sms-progress]');
     const logContainer = root.querySelector('[data-sms-log]');
     const detail = root.querySelector('[data-sms-detail]');
+    const continueButton = root.querySelector('[data-sms-continue]');
     const totalSpan = root.querySelector('[data-sms-total]');
     const modeButtons = Array.from(root.querySelectorAll('[data-sms-mode]'));
     const panels = {
@@ -226,6 +248,8 @@ function initCompose(config) {
         remaining: root.querySelector('[data-sms-remaining]'),
         bar: root.querySelector('[data-sms-bar]'),
     };
+
+    const logTo = logContainer ? (result) => appendLogRow(logContainer, result) : null;
 
     let mode = 'location';
 
@@ -243,6 +267,40 @@ function initCompose(config) {
         senderHint.textContent = info?.senderId ?? '—';
         setPanel(providerWarning, ! (info?.configured ?? false));
         sendButton.disabled = ! (info?.configured ?? false);
+    };
+
+    const finish = (campaignId, progress) => {
+        status.textContent = progress.failed > 0
+            ? `Done — ${format(progress.sent)} sent, ${format(progress.failed)} failed.`
+            : `Done — ${format(progress.sent)} sent.`;
+
+        if (detail) {
+            detail.href = config.detailUrl.replace('__ID__', campaignId);
+        }
+
+        setPanel(detail, true);
+    };
+
+    // Warn before a likely duplicate: the same location broadcast in the last day.
+    const confirmDuplicate = async () => {
+        try {
+            const url = new URL(config.recentUrl, window.location.origin);
+            url.searchParams.set('state_id', stateSelect.value);
+
+            if (lgaSelect.value) {
+                url.searchParams.set('lga_id', lgaSelect.value);
+            }
+
+            const info = await requestJson(url.toString());
+
+            if (! info.recent) {
+                return true;
+            }
+
+            return window.confirm(`This location was already messaged ${info.sent_at} (${format(info.recipients)} recipients). Send again anyway?`);
+        } catch {
+            return true;
+        }
     };
 
     const loadLgas = async () => {
@@ -317,8 +375,32 @@ function initCompose(config) {
     modeButtons.forEach((button) => button.addEventListener('click', () => setMode(button.dataset.smsMode)));
     providerSelect.addEventListener('change', refreshProvider);
 
+    continueButton?.addEventListener('click', async () => {
+        const url = continueButton.dataset.processUrl;
+
+        setPanel(continueButton, false);
+        status.textContent = 'Continuing to the full list…';
+
+        try {
+            const progress = await sendLoop(url, ui, logTo, { resume: true });
+
+            if (progress.paused) {
+                status.textContent = 'Still paused after the test numbers.';
+                setPanel(continueButton, true);
+
+                return;
+            }
+
+            finish(Number(continueButton.dataset.campaignId), progress);
+        } catch (error) {
+            status.textContent = error.message;
+            setPanel(continueButton, true);
+        }
+    });
+
     sendButton.addEventListener('click', async () => {
         const body = { provider: providerSelect.value, mode, message: message.value };
+        const testNumberCount = parseNumbers(testNumbersInput.value).length;
 
         if (mode === 'location') {
             if (! stateSelect.value) {
@@ -333,8 +415,25 @@ function initCompose(config) {
                 body.lga_id = Number(lgaSelect.value);
             }
 
-            if (parseNumbers(testNumbersInput.value).length > 0) {
+            if (testNumberCount > 0) {
                 body.test_numbers = testNumbersInput.value;
+            }
+
+            if (pauseAfterTest?.checked && testNumberCount > 0) {
+                body.pause_after_test = 1;
+            }
+
+            if (skipRecent?.checked) {
+                body.skip_recent = 1;
+                body.skip_days = Math.min(365, Math.max(1, Number(skipDays?.value || 30)));
+            }
+
+            status.textContent = 'Checking for a recent broadcast…';
+
+            if (! await confirmDuplicate()) {
+                status.textContent = 'Cancelled.';
+
+                return;
             }
         } else {
             if (parseNumbers(numbersInput.value).length === 0) {
@@ -349,6 +448,7 @@ function initCompose(config) {
         sendButton.disabled = true;
         setPanel(progressBox, true);
         setPanel(detail, false);
+        setPanel(continueButton, false);
         logContainer?.replaceChildren();
         status.textContent = 'Creating campaign…';
         paintProgress(ui, { sent: 0, failed: 0, remaining: 0, total: 0 });
@@ -363,15 +463,22 @@ function initCompose(config) {
             paintProgress(ui, { sent: 0, failed: 0, remaining: created.total, total: created.total });
             status.textContent = `Sending to ${format(created.total)} recipient(s)…`;
 
-            await runBatches(
-                config.processUrl.replace('__ID__', created.campaign_id),
-                ui,
-                logContainer ? (result) => appendLogRow(logContainer, result) : null,
-            );
+            const url = config.processUrl.replace('__ID__', created.campaign_id);
+            const progress = await sendLoop(url, ui, logTo);
 
-            status.textContent = 'Done.';
-            detail.href = config.detailUrl.replace('__ID__', created.campaign_id);
-            setPanel(detail, true);
+            if (progress.paused) {
+                status.textContent = `Paused after the test numbers — ${format(progress.sent)} sent. Review above, then continue.`;
+
+                if (continueButton) {
+                    continueButton.dataset.processUrl = url;
+                    continueButton.dataset.campaignId = String(created.campaign_id);
+                    setPanel(continueButton, true);
+                }
+
+                return;
+            }
+
+            finish(created.campaign_id, progress);
         } catch (error) {
             status.textContent = error.message;
         } finally {
@@ -393,9 +500,13 @@ function initResume(config) {
     }
 
     const button = root.querySelector('[data-sms-resume-run]');
+    const retryButton = root.querySelector('[data-sms-retry-run]');
     const status = root.querySelector('[data-sms-status]');
     const logContainer = root.querySelector('[data-sms-log]');
     const total = Number(root.dataset.total ?? 0);
+    const resumeFlag = root.dataset.resume === '1';
+
+    const logTo = logContainer ? (result) => appendLogRow(logContainer, result) : null;
 
     const ui = {
         sent: document.querySelector('[data-sms-sent]'),
@@ -411,20 +522,45 @@ function initResume(config) {
         total,
     });
 
-    button.addEventListener('click', async () => {
+    button?.addEventListener('click', async () => {
         button.disabled = true;
         button.textContent = 'Sending…';
         status.textContent = 'Sending the remaining messages…';
 
         try {
-            await runBatches(config.processUrl, ui, logContainer ? (result) => appendLogRow(logContainer, result) : null);
+            const progress = await sendLoop(config.processUrl, ui, logTo, { resume: resumeFlag });
+
+            if (progress.paused) {
+                status.textContent = 'Still paused after the test numbers.';
+                button.disabled = false;
+
+                return;
+            }
 
             status.textContent = 'Finished. Refreshing…';
             window.location.reload();
         } catch (error) {
             status.textContent = error.message;
             button.disabled = false;
-            button.textContent = 'Resume sending';
+            button.textContent = resumeFlag ? 'Continue sending' : 'Resume sending';
+        }
+    });
+
+    retryButton?.addEventListener('click', async () => {
+        retryButton.disabled = true;
+        status.textContent = 'Re-queuing the failed messages…';
+
+        try {
+            await requestJson(root.dataset.retryUrl, { method: 'POST', body: {} });
+            status.textContent = 'Retrying…';
+
+            await sendLoop(config.processUrl, ui, logTo, { resume: true });
+
+            status.textContent = 'Finished. Refreshing…';
+            window.location.reload();
+        } catch (error) {
+            status.textContent = error.message;
+            retryButton.disabled = false;
         }
     });
 }

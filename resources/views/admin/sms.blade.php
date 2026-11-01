@@ -66,6 +66,28 @@
                 <p class="field-hint">Added on top of the location so you can confirm delivery. One per line or comma separated.</p>
             </div>
 
+            <div class="grid gap-3" style="grid-template-columns: repeat(auto-fit, minmax(15rem, 1fr));">
+                <label class="flex cursor-pointer items-start gap-3 rounded-2xl border border-[color:var(--line)] bg-[color:var(--paper)] p-3">
+                    <input type="checkbox" data-sms-pause-after-test class="checkbox mt-0.5">
+                    <span>
+                        <span class="block text-sm font-semibold">Send test numbers first, then pause</span>
+                        <span class="block text-xs text-[color:var(--ink-mute)]">Only the numbers above go out now. Review the responses, then press Continue to send to everyone.</span>
+                    </span>
+                </label>
+
+                <label class="flex cursor-pointer items-start gap-3 rounded-2xl border border-[color:var(--line)] bg-[color:var(--paper)] p-3">
+                    <input type="checkbox" data-sms-skip-recent class="checkbox mt-0.5">
+                    <span>
+                        <span class="block text-sm font-semibold">Skip numbers messaged recently</span>
+                        <span class="mt-1 flex items-center gap-2 text-xs text-[color:var(--ink-mute)]">
+                            Skip anyone messaged in the last
+                            <input type="number" min="1" max="365" value="30" data-sms-skip-days class="admin-input !w-20 !px-2 !py-1 text-xs">
+                            days
+                        </span>
+                    </span>
+                </label>
+            </div>
+
             <p class="text-sm">Recipients: <span class="num font-semibold" data-sms-count>0</span> record(s) + <span class="num font-semibold" data-sms-test-count>0</span> test number(s)</p>
         </div>
 
@@ -100,6 +122,7 @@
                 remaining <span class="num" data-sms-remaining>0</span> of <span class="num" data-sms-total>0</span>
             </p>
             <p class="mt-2 text-sm"><a class="amb-link" href="#" data-sms-detail hidden>View details &amp; headers &rarr;</a></p>
+            <p class="mt-2"><button type="button" class="btn btn-primary !px-4 !py-2.5 text-xs" data-sms-continue hidden>Continue sending to everyone</button></p>
 
             <div class="mt-3 grid gap-2" data-sms-log aria-live="polite" aria-label="Live API responses" style="max-height: 26rem; overflow-y: auto;"></div>
         </div>
@@ -159,6 +182,7 @@
         window.__SMS = {
             mode: 'compose',
             countUrl: {{ Js::from(route('admin.sms.count')) }},
+            recentUrl: {{ Js::from(route('admin.sms.recent')) }},
             storeUrl: {{ Js::from(route('admin.sms.store')) }},
             processUrl: {{ Js::from(route('admin.sms.process', ['campaign' => '__ID__'])) }},
             detailUrl: {{ Js::from(route('admin.sms.show', ['campaign' => '__ID__'])) }},

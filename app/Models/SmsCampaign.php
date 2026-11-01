@@ -16,6 +16,8 @@ class SmsCampaign extends Model
 
     public const STATUS_PROCESSING = 'processing';
 
+    public const STATUS_PAUSED = 'paused';
+
     public const STATUS_COMPLETED = 'completed';
 
     public const STATUS_PARTIAL = 'partial';
@@ -30,18 +32,22 @@ class SmsCampaign extends Model
         'sender_id',
         'message',
         'status',
+        'paused',
         'total_recipients',
         'sent_count',
         'failed_count',
+        'skipped_count',
     ];
 
     protected function casts(): array
     {
         return [
             'provider' => SmsProvider::class,
+            'paused' => 'boolean',
             'total_recipients' => 'integer',
             'sent_count' => 'integer',
             'failed_count' => 'integer',
+            'skipped_count' => 'integer',
         ];
     }
 
@@ -92,7 +98,7 @@ class SmsCampaign extends Model
         $pending = (int) $counts->get(SmsMessage::STATUS_PENDING, 0);
 
         $status = match (true) {
-            $pending > 0 => self::STATUS_PROCESSING,
+            $pending > 0 => $this->paused ? self::STATUS_PAUSED : self::STATUS_PROCESSING,
             $failed > 0 => self::STATUS_PARTIAL,
             default => self::STATUS_COMPLETED,
         };

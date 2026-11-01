@@ -31,13 +31,28 @@ class CreateSmsCampaign
         ?Lga $lga,
         string $message,
         array $extraNumbers = [],
+        ?int $skipMessagedDays = null,
+        bool $pauseAfterTest = false,
     ): SmsCampaign {
         $extraNumbers = array_values(array_unique($extraNumbers));
 
-        $query = VoterRecord::query()
+        // Phones already sent a message recently, when the operator asked to skip them.
+        $messagedPhones = fn (): Builder => SmsMessage::query()
+            ->where('status', SmsMessage::STATUS_SENT)
+            ->when($skipMessagedDays !== null, fn (Builder $inner): Builder => $inner->where('created_at', '>=', now()->subDays($skipMessagedDays)))
+            ->select('phone');
+
+        $base = VoterRecord::query()
             ->inLocation($state->id, $lga?->id)
             // A test number that is also a record here must not receive two messages.
             ->when($extraNumbers !== [], fn (Builder $inner): Builder => $inner->whereNotIn('phone', $extraNumbers));
+
+        $skipped = $skipMessagedDays === null
+            ? 0
+            : max(0, (clone $base)->count() - (clone $base)->whereNotIn('phone', $messagedPhones())->count());
+
+        $query = (clone $base)
+            ->when($skipMessagedDays !== null, fn (Builder $inner): Builder => $inner->whereNotIn('phone', $messagedPhones()));
 
         $campaign = $this->createCampaign(
             $admin,
@@ -47,17 +62,21 @@ class CreateSmsCampaign
             (clone $query)->count() + count($extraNumbers),
             $state->id,
             $lga?->id,
+            $skipped,
+            $pauseAfterTest && $extraNumbers !== [],
         );
 
         $now = now();
+
+        // Queue the test numbers first so their responses are the first thing the
+        // operator sees — they are the "must deliver" checks.
+        $this->attachNumbers($campaign, $extraNumbers, $now);
 
         $query->select(['id', 'phone'])->chunkById(self::INSERT_CHUNK, function ($records) use ($campaign, $now): void {
             $rows = $records->map(fn (VoterRecord $record): array => $this->row($campaign, $record->phone, $now, $record->id))->all();
 
             SmsMessage::query()->insert($rows);
         });
-
-        $this->attachNumbers($campaign, $extraNumbers, $now);
 
         return $campaign;
     }
@@ -84,6 +103,8 @@ class CreateSmsCampaign
         int $total,
         ?int $stateId = null,
         ?int $lgaId = null,
+        int $skipped = 0,
+        bool $paused = false,
     ): SmsCampaign {
         return SmsCampaign::query()->create([
             'provider' => $provider,
@@ -94,8 +115,10 @@ class CreateSmsCampaign
             'channel' => 'sms',
             'sender_id' => $provider->senderId(),
             'message' => $message,
-            'status' => SmsCampaign::STATUS_PROCESSING,
+            'status' => $paused ? SmsCampaign::STATUS_PAUSED : SmsCampaign::STATUS_PROCESSING,
+            'paused' => $paused,
             'total_recipients' => $total,
+            'skipped_count' => $skipped,
         ]);
     }
 

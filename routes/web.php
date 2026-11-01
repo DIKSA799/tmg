@@ -165,8 +165,10 @@ Route::prefix(config('admin.path'))
             Route::get('records/export-phones', [AdminRecordController::class, 'exportPhones'])->name('records.export-phones');
             Route::get('sms', [AdminSmsController::class, 'index'])->name('sms');
             Route::get('sms/count', [AdminSmsController::class, 'count'])->name('sms.count');
+            Route::get('sms/recent', [AdminSmsController::class, 'recent'])->name('sms.recent');
             Route::post('sms', [AdminSmsController::class, 'store'])->name('sms.store');
             Route::post('sms/{campaign}/process', [AdminSmsController::class, 'process'])->name('sms.process');
+            Route::post('sms/{campaign}/retry', [AdminSmsController::class, 'retry'])->name('sms.retry');
             Route::get('sms/{campaign}', [AdminSmsController::class, 'show'])->name('sms.show');
             Route::get('geography', [AdminGeographyController::class, 'index'])->name('geography');
             Route::get('senatorial', [AdminSenatorialController::class, 'index'])->name('senatorial');
