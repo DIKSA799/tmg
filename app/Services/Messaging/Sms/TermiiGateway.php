@@ -1,14 +1,15 @@
 <?php
 
-namespace App\Services\Sms;
+namespace App\Services\Messaging\Sms;
 
-use App\Services\Sms\Concerns\ReadsHttpResponses;
-use App\Services\Sms\Contracts\SmsGateway;
+use App\Services\Messaging\Concerns\ReadsHttpResponses;
+use App\Services\Messaging\Contracts\ChannelGateway;
+use App\Services\Messaging\DispatchResult;
 use Illuminate\Http\Client\Response;
 use Illuminate\Support\Facades\Http;
 use Throwable;
 
-class TermiiGateway implements SmsGateway
+class TermiiGateway implements ChannelGateway
 {
     use ReadsHttpResponses;
 
@@ -17,13 +18,13 @@ class TermiiGateway implements SmsGateway
      * full exchange. One request per number keeps the recorded request/response
      * unambiguous for the console.
      */
-    public function send(string $phone, string $message, string $senderId): SmsResult
+    public function send(string $recipient, ?string $subject, string $body, string $sender): DispatchResult
     {
         $payload = [
             'api_key' => (string) config('services.termii.key'),
-            'to' => ltrim($phone, '+'),
-            'from' => $senderId,
-            'sms' => $message,
+            'to' => ltrim($recipient, '+'),
+            'from' => $sender,
+            'sms' => $body,
             'type' => (string) config('services.termii.type', 'plain'),
             'channel' => (string) config('services.termii.channel', 'generic'),
         ];
@@ -40,7 +41,7 @@ class TermiiGateway implements SmsGateway
                 ->timeout((int) config('services.termii.timeout', 10))
                 ->post($url, $payload);
         } catch (Throwable $exception) {
-            return new SmsResult(
+            return new DispatchResult(
                 ok: false,
                 providerMessageId: null,
                 providerStatus: null,
@@ -61,7 +62,7 @@ class TermiiGateway implements SmsGateway
      * @param  array<string, string>  $headers
      * @param  array<string, mixed>  $recorded
      */
-    private function interpret(string $url, array $headers, array $recorded, Response $response): SmsResult
+    private function interpret(string $url, array $headers, array $recorded, Response $response): DispatchResult
     {
         $body = $response->json();
         $body = is_array($body) ? $body : [];
@@ -74,7 +75,7 @@ class TermiiGateway implements SmsGateway
 
         $messageId = $body['message_id'] ?? $body['message_id_str'] ?? null;
 
-        return new SmsResult(
+        return new DispatchResult(
             ok: $ok,
             providerMessageId: $this->stringOrNull($messageId),
             providerStatus: $this->stringOrNull($body['message'] ?? null),

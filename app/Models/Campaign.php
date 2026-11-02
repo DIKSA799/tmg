@@ -2,16 +2,17 @@
 
 namespace App\Models;
 
+use App\Enums\CampaignChannel;
 use App\Enums\SmsProvider;
-use Database\Factories\SmsCampaignFactory;
+use Database\Factories\CampaignFactory;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 
-class SmsCampaign extends Model
+class Campaign extends Model
 {
-    /** @use HasFactory<SmsCampaignFactory> */
+    /** @use HasFactory<CampaignFactory> */
     use HasFactory;
 
     public const STATUS_PROCESSING = 'processing';
@@ -30,6 +31,7 @@ class SmsCampaign extends Model
         'scope_label',
         'channel',
         'sender_id',
+        'subject',
         'message',
         'status',
         'paused',
@@ -42,7 +44,7 @@ class SmsCampaign extends Model
     protected function casts(): array
     {
         return [
-            'provider' => SmsProvider::class,
+            'channel' => CampaignChannel::class,
             'paused' => 'boolean',
             'total_recipients' => 'integer',
             'sent_count' => 'integer',
@@ -52,11 +54,21 @@ class SmsCampaign extends Model
     }
 
     /**
-     * @return HasMany<SmsMessage, $this>
+     * The SMS provider enum when this campaign went out over SMS, otherwise null.
+     */
+    public function smsProvider(): ?SmsProvider
+    {
+        return $this->channel === CampaignChannel::Sms
+            ? SmsProvider::tryFrom((string) $this->provider)
+            : null;
+    }
+
+    /**
+     * @return HasMany<CampaignMessage, $this>
      */
     public function messages(): HasMany
     {
-        return $this->hasMany(SmsMessage::class);
+        return $this->hasMany(CampaignMessage::class);
     }
 
     /**
@@ -93,9 +105,9 @@ class SmsCampaign extends Model
             ->groupBy('status')
             ->pluck('total', 'status');
 
-        $sent = (int) $counts->get(SmsMessage::STATUS_SENT, 0);
-        $failed = (int) $counts->get(SmsMessage::STATUS_FAILED, 0);
-        $pending = (int) $counts->get(SmsMessage::STATUS_PENDING, 0);
+        $sent = (int) $counts->get(CampaignMessage::STATUS_SENT, 0);
+        $failed = (int) $counts->get(CampaignMessage::STATUS_FAILED, 0);
+        $pending = (int) $counts->get(CampaignMessage::STATUS_PENDING, 0);
 
         $status = match (true) {
             $pending > 0 => $this->paused ? self::STATUS_PAUSED : self::STATUS_PROCESSING,

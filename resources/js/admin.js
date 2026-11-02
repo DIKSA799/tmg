@@ -1,6 +1,6 @@
 import Chart from 'chart.js/auto';
 import { initGeoMap, refreshGeoMap } from './geo-map';
-import { initSms } from './sms';
+import { initMessaging } from './messaging';
 import { initThemeToggle } from './theme';
 
 const FALLBACK = {
@@ -503,4 +503,4 @@ function boot() {
 
 boot();
 initGeoMap();
-initSms();
+initMessaging();

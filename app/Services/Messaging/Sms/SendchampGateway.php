@@ -1,14 +1,15 @@
 <?php
 
-namespace App\Services\Sms;
+namespace App\Services\Messaging\Sms;
 
-use App\Services\Sms\Concerns\ReadsHttpResponses;
-use App\Services\Sms\Contracts\SmsGateway;
+use App\Services\Messaging\Concerns\ReadsHttpResponses;
+use App\Services\Messaging\Contracts\ChannelGateway;
+use App\Services\Messaging\DispatchResult;
 use Illuminate\Http\Client\Response;
 use Illuminate\Support\Facades\Http;
 use Throwable;
 
-class SendchampGateway implements SmsGateway
+class SendchampGateway implements ChannelGateway
 {
     use ReadsHttpResponses;
 
@@ -17,12 +18,12 @@ class SendchampGateway implements SmsGateway
      * exchange. Sendchamp takes an array of recipients; we send one per request
      * so each row records its own request and response.
      */
-    public function send(string $phone, string $message, string $senderId): SmsResult
+    public function send(string $recipient, ?string $subject, string $body, string $sender): DispatchResult
     {
         $payload = [
-            'to' => [ltrim($phone, '+')],
-            'message' => $message,
-            'sender_name' => $senderId,
+            'to' => [ltrim($recipient, '+')],
+            'message' => $body,
+            'sender_name' => $sender,
             'route' => (string) config('services.sendchamp.route', 'non_dnd'),
         ];
 
@@ -42,7 +43,7 @@ class SendchampGateway implements SmsGateway
                 ->timeout((int) config('services.sendchamp.timeout', 10))
                 ->post($url, $payload);
         } catch (Throwable $exception) {
-            return new SmsResult(
+            return new DispatchResult(
                 ok: false,
                 providerMessageId: null,
                 providerStatus: null,
@@ -63,7 +64,7 @@ class SendchampGateway implements SmsGateway
      * @param  array<string, string>  $headers
      * @param  array<string, mixed>  $payload
      */
-    private function interpret(string $url, array $headers, array $payload, Response $response): SmsResult
+    private function interpret(string $url, array $headers, array $payload, Response $response): DispatchResult
     {
         $body = $response->json();
         $body = is_array($body) ? $body : [];
@@ -73,7 +74,7 @@ class SendchampGateway implements SmsGateway
 
         $messageId = $data['id'] ?? $data['reference'] ?? null;
 
-        return new SmsResult(
+        return new DispatchResult(
             ok: $ok,
             providerMessageId: $this->stringOrNull($messageId),
             providerStatus: $this->stringOrNull($data['status'] ?? null) ?? $this->stringOrNull($body['message'] ?? null),

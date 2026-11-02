@@ -2,15 +2,16 @@
 
 namespace App\Models;
 
-use App\Services\Sms\SmsResult;
-use Database\Factories\SmsMessageFactory;
+use App\Enums\CampaignChannel;
+use App\Services\Messaging\DispatchResult;
+use Database\Factories\CampaignMessageFactory;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
-class SmsMessage extends Model
+class CampaignMessage extends Model
 {
-    /** @use HasFactory<SmsMessageFactory> */
+    /** @use HasFactory<CampaignMessageFactory> */
     use HasFactory;
 
     public const STATUS_PENDING = 'pending';
@@ -20,9 +21,10 @@ class SmsMessage extends Model
     public const STATUS_FAILED = 'failed';
 
     protected $fillable = [
-        'sms_campaign_id',
+        'campaign_id',
+        'channel',
         'voter_record_id',
-        'phone',
+        'recipient',
         'status',
         'provider_message_id',
         'provider_status',
@@ -39,6 +41,7 @@ class SmsMessage extends Model
     protected function casts(): array
     {
         return [
+            'channel' => CampaignChannel::class,
             'request_headers' => 'array',
             'request_body' => 'array',
             'response_headers' => 'array',
@@ -48,11 +51,11 @@ class SmsMessage extends Model
     }
 
     /**
-     * @return BelongsTo<SmsCampaign, $this>
+     * @return BelongsTo<Campaign, $this>
      */
     public function campaign(): BelongsTo
     {
-        return $this->belongsTo(SmsCampaign::class, 'sms_campaign_id');
+        return $this->belongsTo(Campaign::class);
     }
 
     /**
@@ -64,9 +67,9 @@ class SmsMessage extends Model
     }
 
     /**
-     * Store the full Termii exchange for this recipient and mark the outcome.
+     * Store the full exchange for this recipient and mark the outcome.
      */
-    public function recordResult(SmsResult $result): void
+    public function recordResult(DispatchResult $result): void
     {
         $this->fill([
             'status' => $result->ok ? self::STATUS_SENT : self::STATUS_FAILED,

@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Services\Sms\Concerns;
+namespace App\Services\Messaging\Concerns;
 
 use Illuminate\Http\Client\Response;
 

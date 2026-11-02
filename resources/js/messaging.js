@@ -69,7 +69,7 @@ function appendLogRow(container, result) {
 
     const summary = document.createElement('summary');
     summary.className = 'flex cursor-pointer items-center gap-2 text-xs';
-    summary.innerHTML = `<span class="num">${escapeHtml(result.phone)}</span>`
+    summary.innerHTML = `<span class="num">${escapeHtml(result.recipient)}</span>`
         + `<span class="admin-pill">${escapeHtml(result.status)}</span>`
         + `<span class="truncate text-[color:var(--ink-mute)]">${escapeHtml(result.provider_message_id || result.provider_status || result.error || '')}</span>`;
 
@@ -89,9 +89,8 @@ function appendLogRow(container, result) {
     container.scrollTop = container.scrollHeight;
 }
 
-// Mirrors App\Support\PhoneNumber::normalize so the live count matches what the
-// server will accept. Returns bare national digits, or null when invalid.
-function normaliseNumber(value) {
+// Mirrors App\Support\PhoneNumber::normalize. Returns bare national digits.
+function normalisePhone(value) {
     let digits = String(value ?? '').replace(/\D+/g, '');
 
     if (digits === '') {
@@ -111,20 +110,27 @@ function normaliseNumber(value) {
     return /^[789]\d{9}$/.test(digits) ? digits : null;
 }
 
-function parseNumbers(raw) {
+function normaliseEmail(value) {
+    const email = String(value ?? '').trim().toLowerCase();
+
+    return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email) ? email : null;
+}
+
+function parseRecipients(channel, raw) {
+    const normalise = channel === 'email' ? normaliseEmail : normalisePhone;
     const seen = new Set();
-    const numbers = [];
+    const values = [];
 
     String(raw ?? '').split(/[\s,;]+/).forEach((part) => {
-        const normalised = normaliseNumber(part);
+        const normalised = normalise(part);
 
         if (normalised !== null && ! seen.has(normalised)) {
             seen.add(normalised);
-            numbers.push(normalised);
+            values.push(normalised);
         }
     });
 
-    return numbers;
+    return values;
 }
 
 async function requestJson(url, { method = 'GET', body = null } = {}) {
@@ -176,8 +182,6 @@ function paintProgress(ui, progress) {
 /**
  * Drive the sender one batch at a time, streaming every exchange to onResults.
  * Returns early when the campaign is paused for a test review, or when it is done.
- *
- * @param {{resume?: boolean}} options  resume lifts a pause on the first call.
  */
 async function sendLoop(processUrl, ui, onResults, { resume = false } = {}) {
     let liftPause = resume;
@@ -207,66 +211,112 @@ async function sendLoop(processUrl, ui, onResults, { resume = false } = {}) {
 }
 
 function initCompose(config) {
-    const root = document.querySelector('[data-sms-compose]');
+    const root = document.querySelector('[data-msg-compose]');
 
     if (! root) {
         return;
     }
 
-    const providerSelect = root.querySelector('[data-sms-provider]');
-    const senderHint = root.querySelector('[data-sms-sender]');
-    const providerWarning = root.querySelector('[data-sms-provider-warning]');
-    const stateSelect = root.querySelector('[data-sms-state]');
-    const lgaSelect = root.querySelector('[data-sms-lga]');
-    const count = root.querySelector('[data-sms-count]');
-    const numbersInput = root.querySelector('[data-sms-numbers]');
-    const numberCount = root.querySelector('[data-sms-number-count]');
-    const testNumbersInput = root.querySelector('[data-sms-test-numbers]');
-    const testCount = root.querySelector('[data-sms-test-count]');
-    const pauseAfterTest = root.querySelector('[data-sms-pause-after-test]');
-    const skipRecent = root.querySelector('[data-sms-skip-recent]');
-    const skipDays = root.querySelector('[data-sms-skip-days]');
-    const message = root.querySelector('[data-sms-message]');
-    const chars = root.querySelector('[data-sms-chars]');
-    const segments = root.querySelector('[data-sms-segments]');
-    const sendButton = root.querySelector('[data-sms-send]');
-    const status = root.querySelector('[data-sms-status]');
-    const progressBox = root.querySelector('[data-sms-progress]');
-    const logContainer = root.querySelector('[data-sms-log]');
-    const detail = root.querySelector('[data-sms-detail]');
-    const continueButton = root.querySelector('[data-sms-continue]');
-    const totalSpan = root.querySelector('[data-sms-total]');
-    const modeButtons = Array.from(root.querySelectorAll('[data-sms-mode]'));
+    const channelSelect = root.querySelector('[data-msg-channel]');
+    const providerSelect = root.querySelector('[data-msg-provider]');
+    const senderHint = root.querySelector('[data-msg-sender]');
+    const providerWarning = root.querySelector('[data-msg-provider-warning]');
+    const smsField = root.querySelector('[data-msg-sms-field]');
+    const emailField = root.querySelector('[data-msg-email-field]');
+    const stateSelect = root.querySelector('[data-msg-state]');
+    const lgaSelect = root.querySelector('[data-msg-lga]');
+    const count = root.querySelector('[data-msg-count]');
+    const testInput = root.querySelector('[data-msg-test-recipients]');
+    const testLabel = root.querySelector('[data-msg-test-label]');
+    const testCount = root.querySelector('[data-msg-test-count]');
+    const manualInput = root.querySelector('[data-msg-manual-recipients]');
+    const manualLabel = root.querySelector('[data-msg-manual-label]');
+    const manualCount = root.querySelector('[data-msg-manual-count]');
+    const pauseAfterTest = root.querySelector('[data-msg-pause-after-test]');
+    const skipRecent = root.querySelector('[data-msg-skip-recent]');
+    const skipDays = root.querySelector('[data-msg-skip-days]');
+    const subjectWrap = root.querySelector('[data-msg-subject-wrap]');
+    const subject = root.querySelector('[data-msg-subject]');
+    const message = root.querySelector('[data-msg-message]');
+    const chars = root.querySelector('[data-msg-chars]');
+    const segments = root.querySelector('[data-msg-segments]');
+    const segmentsWrap = root.querySelector('[data-msg-segments-wrap]');
+    const sendButton = root.querySelector('[data-msg-send]');
+    const status = root.querySelector('[data-msg-status]');
+    const progressBox = root.querySelector('[data-msg-progress]');
+    const logContainer = root.querySelector('[data-msg-log]');
+    const detail = root.querySelector('[data-msg-detail]');
+    const continueButton = root.querySelector('[data-msg-continue]');
+    const totalSpan = root.querySelector('[data-msg-total]');
+    const modeButtons = Array.from(root.querySelectorAll('[data-msg-mode]'));
     const panels = {
-        location: root.querySelector('[data-sms-panel="location"]'),
-        manual: root.querySelector('[data-sms-panel="manual"]'),
+        records: root.querySelector('[data-msg-panel="records"]'),
+        list: root.querySelector('[data-msg-panel="list"]'),
     };
 
     const ui = {
-        sent: root.querySelector('[data-sms-sent]'),
-        failed: root.querySelector('[data-sms-failed]'),
-        remaining: root.querySelector('[data-sms-remaining]'),
-        bar: root.querySelector('[data-sms-bar]'),
+        sent: root.querySelector('[data-msg-sent]'),
+        failed: root.querySelector('[data-msg-failed]'),
+        remaining: root.querySelector('[data-msg-remaining]'),
+        bar: root.querySelector('[data-msg-bar]'),
     };
 
     const logTo = logContainer ? (result) => appendLogRow(logContainer, result) : null;
 
-    let mode = 'location';
+    let mode = 'records';
+    let sending = false;
 
-    const setMode = (next) => {
-        mode = next;
-        modeButtons.forEach((button) => button.classList.toggle('is-active', button.dataset.smsMode === next));
-        setPanel(panels.location, next === 'location');
-        setPanel(panels.manual, next === 'manual');
-    };
+    const channelInfo = () => (config.channels ?? []).find((channel) => channel.value === channelSelect.value) ?? null;
+    const isEmail = () => channelSelect.value === 'email';
 
     const providerInfo = () => (config.providers ?? []).find((provider) => provider.value === providerSelect.value) ?? null;
 
+    const configuredFor = () => (isEmail() ? config.emailConfigured === true : (providerInfo()?.configured ?? false));
+
+    const refreshSendState = () => {
+        sendButton.disabled = sending || ! configuredFor();
+    };
+
+    const setMode = (next) => {
+        mode = next;
+        modeButtons.forEach((button) => button.classList.toggle('is-active', button.dataset.msgMode === next));
+        setPanel(panels.records, next === 'records');
+        setPanel(panels.list, next === 'list');
+    };
+
     const refreshProvider = () => {
         const info = providerInfo();
-        senderHint.textContent = info?.senderId ?? '—';
+
+        if (senderHint) {
+            senderHint.textContent = info?.senderId ?? '—';
+        }
+
         setPanel(providerWarning, ! (info?.configured ?? false));
-        sendButton.disabled = ! (info?.configured ?? false);
+        refreshSendState();
+    };
+
+    const refreshChannel = () => {
+        const info = channelInfo();
+        const email = isEmail();
+
+        setPanel(smsField, ! email);
+        setPanel(emailField, email);
+        setPanel(subjectWrap, email);
+        setPanel(segmentsWrap, ! email);
+
+        if (testLabel) {
+            testLabel.textContent = `Also send to these ${(info?.fieldLabel ?? 'phone numbers').toLowerCase()} (optional test recipients)`;
+        }
+
+        if (manualLabel) {
+            manualLabel.textContent = info?.fieldLabel ?? 'Phone numbers';
+        }
+
+        refreshProvider();
+        refreshCount();
+        refreshTestCount();
+        refreshManualCount();
+        refreshMessage();
     };
 
     const finish = (campaignId, progress) => {
@@ -281,11 +331,15 @@ function initCompose(config) {
         setPanel(detail, true);
     };
 
-    // Warn before a likely duplicate: the same location broadcast in the last day.
+    // Warn before a likely duplicate: the same channel/location in the last day.
     const confirmDuplicate = async () => {
         try {
             const url = new URL(config.recentUrl, window.location.origin);
-            url.searchParams.set('state_id', stateSelect.value);
+            url.searchParams.set('channel', channelSelect.value);
+
+            if (stateSelect.value) {
+                url.searchParams.set('state_id', stateSelect.value);
+            }
 
             if (lgaSelect.value) {
                 url.searchParams.set('lga_id', lgaSelect.value);
@@ -297,7 +351,7 @@ function initCompose(config) {
                 return true;
             }
 
-            return window.confirm(`This location was already messaged ${info.sent_at} (${format(info.recipients)} recipients). Send again anyway?`);
+            return window.confirm(`This audience was already messaged ${info.sent_at} (${format(info.recipients)} recipients). Send again anyway?`);
         } catch {
             return true;
         }
@@ -324,19 +378,17 @@ function initCompose(config) {
                 lgaSelect.append(option);
             });
         } catch {
-            // Leave the LGA list empty; the state-wide count still works.
+            // Leave the LGA list empty; the nationwide/state count still works.
         }
     };
 
     const refreshCount = async () => {
-        if (! stateSelect.value) {
-            count.textContent = '0';
-
-            return;
-        }
-
         const url = new URL(config.countUrl, window.location.origin);
-        url.searchParams.set('state_id', stateSelect.value);
+        url.searchParams.set('channel', channelSelect.value);
+
+        if (stateSelect.value) {
+            url.searchParams.set('state_id', stateSelect.value);
+        }
 
         if (lgaSelect.value) {
             url.searchParams.set('lga_id', lgaSelect.value);
@@ -350,12 +402,12 @@ function initCompose(config) {
         }
     };
 
-    const refreshManualCount = () => {
-        numberCount.textContent = format(parseNumbers(numbersInput.value).length);
+    const refreshTestCount = () => {
+        testCount.textContent = format(parseRecipients(channelSelect.value, testInput.value).length);
     };
 
-    const refreshTestCount = () => {
-        testCount.textContent = format(parseNumbers(testNumbersInput.value).length);
+    const refreshManualCount = () => {
+        manualCount.textContent = format(parseRecipients(channelSelect.value, manualInput.value).length);
     };
 
     const refreshMessage = () => {
@@ -364,16 +416,17 @@ function initCompose(config) {
         segments.textContent = format(Math.max(1, Math.ceil(length / SEGMENT_LENGTH)));
     };
 
+    channelSelect.addEventListener('change', refreshChannel);
+    providerSelect.addEventListener('change', refreshProvider);
     stateSelect.addEventListener('change', async () => {
         await loadLgas();
         await refreshCount();
     });
     lgaSelect.addEventListener('change', refreshCount);
-    numbersInput.addEventListener('input', refreshManualCount);
-    testNumbersInput.addEventListener('input', refreshTestCount);
+    testInput.addEventListener('input', refreshTestCount);
+    manualInput.addEventListener('input', refreshManualCount);
     message.addEventListener('input', refreshMessage);
-    modeButtons.forEach((button) => button.addEventListener('click', () => setMode(button.dataset.smsMode)));
-    providerSelect.addEventListener('change', refreshProvider);
+    modeButtons.forEach((button) => button.addEventListener('click', () => setMode(button.dataset.msgMode)));
 
     continueButton?.addEventListener('click', async () => {
         const url = continueButton.dataset.processUrl;
@@ -385,7 +438,7 @@ function initCompose(config) {
             const progress = await sendLoop(url, ui, logTo, { resume: true });
 
             if (progress.paused) {
-                status.textContent = 'Still paused after the test numbers.';
+                status.textContent = 'Still paused after the test recipients.';
                 setPanel(continueButton, true);
 
                 return;
@@ -399,24 +452,29 @@ function initCompose(config) {
     });
 
     sendButton.addEventListener('click', async () => {
-        const body = { provider: providerSelect.value, mode, message: message.value };
-        const testNumberCount = parseNumbers(testNumbersInput.value).length;
+        const email = isEmail();
+        const channel = channelSelect.value;
+        const body = { channel, mode, message: message.value };
 
-        if (mode === 'location') {
-            if (! stateSelect.value) {
-                status.textContent = 'Select a state first.';
+        if (email) {
+            body.subject = subject.value;
+        } else {
+            body.provider = providerSelect.value;
+        }
 
-                return;
-            }
+        const testNumberCount = parseRecipients(channel, testInput.value).length;
 
-            body.state_id = Number(stateSelect.value);
+        if (mode === 'records') {
+            if (stateSelect.value) {
+                body.state_id = Number(stateSelect.value);
 
-            if (lgaSelect.value) {
-                body.lga_id = Number(lgaSelect.value);
+                if (lgaSelect.value) {
+                    body.lga_id = Number(lgaSelect.value);
+                }
             }
 
             if (testNumberCount > 0) {
-                body.test_numbers = testNumbersInput.value;
+                body.test_recipients = testInput.value;
             }
 
             if (pauseAfterTest?.checked && testNumberCount > 0) {
@@ -436,16 +494,17 @@ function initCompose(config) {
                 return;
             }
         } else {
-            if (parseNumbers(numbersInput.value).length === 0) {
-                status.textContent = 'Add at least one valid phone number.';
+            if (parseRecipients(channel, manualInput.value).length === 0) {
+                status.textContent = email ? 'Add at least one valid email address.' : 'Add at least one valid phone number.';
 
                 return;
             }
 
-            body.manual_numbers = numbersInput.value;
+            body.manual_recipients = manualInput.value;
         }
 
-        sendButton.disabled = true;
+        sending = true;
+        refreshSendState();
         setPanel(progressBox, true);
         setPanel(detail, false);
         setPanel(continueButton, false);
@@ -467,7 +526,7 @@ function initCompose(config) {
             const progress = await sendLoop(url, ui, logTo);
 
             if (progress.paused) {
-                status.textContent = `Paused after the test numbers — ${format(progress.sent)} sent. Review above, then continue.`;
+                status.textContent = `Paused after the test recipients — ${format(progress.sent)} sent. Review above, then continue.`;
 
                 if (continueButton) {
                     continueButton.dataset.processUrl = url;
@@ -482,37 +541,36 @@ function initCompose(config) {
         } catch (error) {
             status.textContent = error.message;
         } finally {
-            refreshProvider();
+            sending = false;
+            refreshSendState();
         }
     });
 
-    setMode('location');
-    refreshMessage();
-    refreshProvider();
-    refreshTestCount();
+    setMode('records');
+    refreshChannel();
 }
 
 function initResume(config) {
-    const root = document.querySelector('[data-sms-resume]');
+    const root = document.querySelector('[data-msg-resume]');
 
     if (! root) {
         return;
     }
 
-    const button = root.querySelector('[data-sms-resume-run]');
-    const retryButton = root.querySelector('[data-sms-retry-run]');
-    const status = root.querySelector('[data-sms-status]');
-    const logContainer = root.querySelector('[data-sms-log]');
+    const button = root.querySelector('[data-msg-resume-run]');
+    const retryButton = root.querySelector('[data-msg-retry-run]');
+    const status = root.querySelector('[data-msg-status]');
+    const logContainer = root.querySelector('[data-msg-log]');
     const total = Number(root.dataset.total ?? 0);
     const resumeFlag = root.dataset.resume === '1';
 
     const logTo = logContainer ? (result) => appendLogRow(logContainer, result) : null;
 
     const ui = {
-        sent: document.querySelector('[data-sms-sent]'),
-        failed: document.querySelector('[data-sms-failed]'),
-        remaining: root.querySelector('[data-sms-remaining]'),
-        bar: root.querySelector('[data-sms-bar]'),
+        sent: document.querySelector('[data-msg-sent]'),
+        failed: document.querySelector('[data-msg-failed]'),
+        remaining: root.querySelector('[data-msg-remaining]'),
+        bar: root.querySelector('[data-msg-bar]'),
     };
 
     paintProgress(ui, {
@@ -531,7 +589,7 @@ function initResume(config) {
             const progress = await sendLoop(config.processUrl, ui, logTo, { resume: resumeFlag });
 
             if (progress.paused) {
-                status.textContent = 'Still paused after the test numbers.';
+                status.textContent = 'Still paused after the test recipients.';
                 button.disabled = false;
 
                 return;
@@ -565,8 +623,8 @@ function initResume(config) {
     });
 }
 
-export function initSms() {
-    const config = window.__SMS;
+export function initMessaging() {
+    const config = window.__MSG;
 
     if (! config) {
         return;
